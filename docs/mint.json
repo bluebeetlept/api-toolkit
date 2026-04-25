@@ -94,6 +94,7 @@
       "group": "HTTP",
       "pages": [
         "http/middleware",
+        "http/idempotency",
         "http/form-requests",
         "http/validation-rules"
       ]
