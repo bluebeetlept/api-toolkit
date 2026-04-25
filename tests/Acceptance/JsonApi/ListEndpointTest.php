@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Eufaturo\ApiToolkit\Tests\Acceptance\JsonApi;
 
-use Eufaturo\ApiToolkit\Http\Response;
 use Eufaturo\ApiToolkit\QueryBuilder;
 use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Category;
 use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Product;
@@ -21,13 +20,11 @@ final class ListEndpointTest extends TestCase
     {
         parent::setUp();
 
-        Route::get('/api/v1/products', function (Response $response) {
-            $products = QueryBuilder::for(Product::class, request())
+        Route::get('/api/v1/products', function () {
+            return QueryBuilder::for(Product::class, request())
                 ->fromResource(ProductResource::class)
                 ->paginate()
             ;
-
-            return $response->success($products, ProductResource::class)->respond();
         });
     }
 

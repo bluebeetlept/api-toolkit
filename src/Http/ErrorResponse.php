@@ -6,7 +6,7 @@ namespace Eufaturo\ApiToolkit\Http;
 
 use Illuminate\Http\JsonResponse;
 
-final class ErrorResponse
+final class ErrorResponse implements \Illuminate\Contracts\Support\Responsable
 {
     /**
      * @var array<string, mixed>
@@ -52,6 +52,11 @@ final class ErrorResponse
         $this->source = $source;
 
         return $this;
+    }
+
+    public function toResponse($request): JsonResponse
+    {
+        return $this->respond();
     }
 
     public function respond(int | null $status = null, array $headers = []): JsonResponse

@@ -24,7 +24,7 @@ final class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\Eufaturo\ApiToolkit\Tests\Fixtures\Models\Category, $this>
+     * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo
     {
@@ -32,7 +32,7 @@ final class Product extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\Eufaturo\ApiToolkit\Tests\Fixtures\Models\Tag, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Tag, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function tags(): BelongsToMany
     {

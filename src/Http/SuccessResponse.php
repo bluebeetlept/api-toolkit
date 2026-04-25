@@ -13,7 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
-final class SuccessResponse
+final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
 {
     /**
      * @var array<string, mixed>
@@ -61,6 +61,11 @@ final class SuccessResponse
         $this->links = array_merge($this->links, $links);
 
         return $this;
+    }
+
+    public function toResponse($request): JsonResponse
+    {
+        return $this->respond();
     }
 
     public function respond(int $status = 200, array $headers = []): JsonResponse

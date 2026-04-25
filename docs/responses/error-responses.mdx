@@ -3,10 +3,12 @@ title: Error Responses
 description: Build JSON:API error responses
 ---
 
+`ErrorResponse` implements Laravel's `Responsable` interface. The HTTP status code is derived from the status you pass to `error()`, so you can return it directly without calling `->respond()`.
+
 ## Basic error
 
 ```php
-return $this->response->error('Not Found', 'Product does not exist', 404)->respond();
+return $this->response->error('Not Found', 'Product does not exist', 404);
 ```
 
 ```json
@@ -26,8 +28,7 @@ return $this->response->error('Not Found', 'Product does not exist', 404)->respo
 ```php
 return $this->response
     ->error('Validation Error', 'Name is required', 422)
-    ->code('validation_error')
-    ->respond();
+    ->code('validation_error');
 ```
 
 ```json
@@ -51,8 +52,7 @@ Point to the field that caused the error:
 return $this->response
     ->error('Validation Error', 'Name is required', 422)
     ->code('validation_error')
-    ->source(['pointer' => '/data/attributes/name'])
-    ->respond();
+    ->source(['pointer' => '/data/attributes/name']);
 ```
 
 ## With meta
@@ -60,13 +60,12 @@ return $this->response
 ```php
 return $this->response
     ->error('Rate Limited', 'Too many requests', 429)
-    ->meta(['retry_after' => 60])
-    ->respond();
+    ->meta(['retry_after' => 60]);
 ```
 
-## Custom status code on respond
+## Custom headers
 
-Override the status code at response time:
+Use `->respond()` when you need custom headers:
 
 ```php
 return $this->response

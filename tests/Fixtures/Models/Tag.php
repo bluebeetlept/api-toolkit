@@ -12,7 +12,7 @@ final class Tag extends Model
     protected $guarded = [];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\Eufaturo\ApiToolkit\Tests\Fixtures\Models\Product, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Product, $this, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function products(): BelongsToMany
     {

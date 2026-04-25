@@ -14,7 +14,7 @@ When you pass an array, `Collection`, or paginator to a success response, the to
 ```php
 $products = Product::query()->paginate(20);
 
-return $response->success($products, ProductResource::class)->respond();
+return $response->success($products, ProductResource::class);
 ```
 
 ## Supported data types
