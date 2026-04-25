@@ -77,6 +77,48 @@ readonly class TestDataResponse
         return $this;
     }
 
+    /**
+     * Scope to a specific item in the array by index.
+     */
+    public function item(int $index): self
+    {
+        Assert::assertArrayHasKey($index, $this->data, "Failed asserting that data has item at index [{$index}].");
+
+        return new self($this->data[$index]);
+    }
+
+    /**
+     * Scope to the attributes key of the current data.
+     */
+    public function attributes(): self
+    {
+        return new self($this->data['attributes'] ?? []);
+    }
+
+    /**
+     * Scope to the relationships key of the current data.
+     */
+    public function relationships(): self
+    {
+        return new self($this->data['relationships'] ?? []);
+    }
+
+    /**
+     * Scope to the meta key of the current data.
+     */
+    public function meta(): self
+    {
+        return new self($this->data['meta'] ?? []);
+    }
+
+    /**
+     * Scope to the links key of the current data.
+     */
+    public function links(): self
+    {
+        return new self($this->data['links'] ?? []);
+    }
+
     public function assertHasKey(string $key): self
     {
         Assert::assertTrue(Arr::has($this->data, $key), "Failed asserting that data has key [{$key}].");
