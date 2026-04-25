@@ -1,0 +1,68 @@
+---
+title: Installation
+description: How to install and configure API Toolkit
+---
+
+## Requirements
+
+- PHP 8.4+
+- Laravel 13.0+
+
+## Install via Composer
+
+```bash
+composer require eufaturo/api-toolkit:^1.0@dev
+```
+
+The package auto-discovers its service provider via Laravel's package discovery.
+
+## Publish configuration
+
+```bash
+php artisan vendor:publish --tag=api-toolkit-config
+```
+
+This publishes `config/api-toolkit.php` with the following options:
+
+```php config/api-toolkit.php
+return [
+    'pagination' => [
+        'default_size' => 20,
+        'max_size' => 100,
+        'valid_sizes' => [10, 20, 40, 80, 100],
+    ],
+
+    'exceptions' => [
+        'dont_report' => [],
+        'domain' => [],
+    ],
+];
+```
+
+## Exception handling
+
+To enable JSON:API exception rendering, configure it in your application's bootstrap:
+
+```php bootstrap/app.php
+use Eufaturo\ApiToolkit\Exceptions\ConfigureExceptionHandler;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withExceptions(new ConfigureExceptionHandler())
+    ->create();
+```
+
+## Middleware
+
+Register the middleware in your API route group:
+
+```php bootstrap/app.php
+use Eufaturo\ApiToolkit\Http\Middleware\ForceJsonApiResponse;
+use Eufaturo\ApiToolkit\Http\Middleware\DetectLanguage;
+
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->api(prepend: [
+        ForceJsonApiResponse::class,
+        DetectLanguage::class,
+    ]);
+})
+```

@@ -1,0 +1,72 @@
+---
+title: Overrides
+description: Override Resource defaults on a per-endpoint basis
+---
+
+Any method called explicitly on the QueryBuilder takes precedence over the Resource defaults.
+
+## Override filters
+
+```php
+QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->allowedFilters(['status' => new ExactFilter()]) // replaces Resource filters
+    ->paginate();
+```
+
+## Override sorts
+
+```php
+QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->allowedSorts(['name']) // replaces Resource sorts
+    ->paginate();
+```
+
+## Override default sort
+
+```php
+QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->defaultSort('name') // replaces Resource default sort
+    ->paginate();
+```
+
+## Override includes
+
+```php
+QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->allowedIncludes(['category']) // replaces Resource includes
+    ->paginate();
+```
+
+## Precedence rules
+
+| | Resource defined | QueryBuilder defined | Result |
+|---|---|---|---|
+| Filters | `['name', 'status']` | not called | Resource filters apply |
+| Filters | `['name', 'status']` | `['status']` | Only `status` filter |
+| Sorts | `['name', 'created_at']` | not called | Resource sorts apply |
+| Default sort | `-created_at` | `name` | `name` (ascending) |
+| Includes | derived from `relationships()` | `['category']` | Only `category` |
+
+<Note>
+  Overrides are full replacements, not merges. If the Resource defines filters `['name', 'status']` and you call `allowedFilters(['status'])`, only `status` is available.
+</Note>
+
+## Without a Resource
+
+You can use the QueryBuilder without any Resource, fully manual:
+
+```php
+QueryBuilder::for(Product::class, $request)
+    ->allowedFilters([
+        'status' => new ExactFilter(),
+        'name' => new PartialFilter(),
+    ])
+    ->allowedSorts(['name', 'created_at'])
+    ->defaultSort('-created_at')
+    ->allowedIncludes(['category', 'supplier'])
+    ->paginate();
+```

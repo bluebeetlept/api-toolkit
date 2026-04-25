@@ -1,0 +1,69 @@
+---
+title: Overview
+description: Test helpers for JSON:API responses
+---
+
+API Toolkit provides testing utilities that extend Laravel's test infrastructure with JSON:API aware assertions.
+
+## TestCase
+
+Extend `Eufaturo\ApiToolkit\Testing\TestCase` instead of Laravel's base test case:
+
+```php
+use Eufaturo\ApiToolkit\Testing\TestCase;
+
+abstract class ApiTestCase extends TestCase
+{
+    // Your base test case
+}
+```
+
+This automatically configures the custom `TestResponse` with JSON:API assertion methods.
+
+## TestResponse
+
+The `TestResponse` class extends Laravel's `TestResponse` with additional methods for JSON:API responses.
+
+### Accessing response sections
+
+```php
+$response = $this->getJson('/api/products');
+
+// Access the data section
+$response->data();
+
+// Access the errors section
+$response->errors();
+
+// Access the included section
+$response->included();
+
+// Access the meta section
+$response->meta();
+```
+
+Each of these returns a `TestDataResponse` for chainable assertions.
+
+## Quick example
+
+```php
+public function test_it_lists_products(): void
+{
+    Product::factory()->count(3)->create();
+
+    $response = $this->getJson('/api/products');
+
+    $response->assertStatus(200);
+    $response->data()->assertCount(3);
+    $response->meta()->assertSame('page.currentPage', 1);
+}
+
+public function test_it_returns_not_found(): void
+{
+    $response = $this->getJson('/api/products/nonexistent');
+
+    $response->assertStatus(404);
+    $response->assertErrorCode('invalid_request_error');
+    $response->assertErrorTitle('Not Found');
+}
+```

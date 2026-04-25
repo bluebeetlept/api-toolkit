@@ -1,0 +1,79 @@
+---
+title: Overview
+description: Fluent query builder that ties everything together
+---
+
+The `QueryBuilder` is a fluent wrapper that applies filtering, sorting, includes, and pagination from the request. It reads defaults from your [Resource](/resources/overview) and allowing overrides.
+
+## Why use it?
+
+Without the QueryBuilder, a list controller requires a lot of boilerplate:
+
+```php
+// Without QueryBuilder
+$query = Product::query();
+
+(new FilterParser([...]))->apply($request, $query);
+(new SortParser(allowed: [...], default: '...'))->apply($request, $query);
+(new IncludeParser(allowed: [...]))->apply($request, $query);
+
+$results = (new OffsetPaginator())->paginate($request, $query);
+```
+
+With the QueryBuilder:
+
+```php
+// With QueryBuilder
+$results = QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->paginate();
+```
+
+## Basic usage
+
+```php
+use Eufaturo\ApiToolkit\QueryBuilder;
+
+$products = QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->paginate();
+
+return $response->success($products, ProductResource::class)->respond();
+```
+
+The QueryBuilder reads `allowedFilters()`, `allowedSorts()`, `defaultSort()`, and `allowedIncludes()` from the Resource and applies them automatically.
+
+## Starting from an existing query
+
+You can pass an existing `Builder` instance instead of a model class:
+
+```php
+$query = Product::query()->where('company_id', $companyId);
+
+$products = QueryBuilder::for($query, $request)
+    ->fromResource(ProductResource::class)
+    ->paginate();
+```
+
+## Terminal methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `paginate()` | `LengthAwarePaginator` | Offset-based pagination |
+| `cursorPaginate()` | `CursorPaginator` | Cursor-based pagination |
+| `get()` | `Collection` | All results (no pagination) |
+
+## Accessing the underlying query
+
+Use `getQuery()` to access the Eloquent `Builder` before executing:
+
+```php
+$builder = QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class);
+
+$query = $builder->getQuery();
+// Add custom logic
+$query->whereHas('inventory', fn ($q) => $q->where('quantity', '>', 0));
+
+$products = $builder->paginate();
+```

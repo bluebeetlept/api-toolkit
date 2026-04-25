@@ -1,0 +1,96 @@
+---
+title: Overview
+description: Auto-generate OpenAPI 3.1 specs from your Resources
+---
+
+API Toolkit includes a built-in OpenAPI 3.1 generator that reads your Resource definitions and produces a complete specification. No external dependencies, no annotations, no manual schema writing.
+
+## How it works
+
+The generator:
+
+1. **Scans your routes** to find controllers that use `Response` or `QueryBuilder`
+2. **Reads your Resources** to extract type, attributes, relationships, filters, sorts, and includes
+3. **Reads your FormRequests** to extract request body validation rules
+4. **Outputs a valid OpenAPI 3.1 JSON file** with paths, schemas, parameters, and error responses
+
+Everything is derived from code you've already written.
+
+## Quick start
+
+```bash
+php artisan api-toolkit:openapi --pretty
+```
+
+This generates an `openapi.json` file in your project root.
+
+## What gets generated
+
+For each endpoint that uses API Toolkit:
+
+- **Path** with the correct HTTP method
+- **Resource schema** as a `$ref` component (type, id, attributes, relationships, links, meta)
+- **Collection schema** with pagination metadata and links
+- **Query parameters** for list endpoints (filter, sort, include, page)
+- **Request body** from FormRequest validation rules (for POST/PUT/PATCH)
+- **Response schemas** with correct status codes (200, 201, 204, 401, 404, 422)
+- **Error schema** following JSON:API error format
+- **Tags** derived from the Resource name
+
+## Example output
+
+For a `ProductResource` with filters and relationships, the generator produces:
+
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/products": {
+      "get": {
+        "summary": "List Products",
+        "tags": ["Products"],
+        "parameters": [
+          {"name": "filter[name]", "in": "query", "schema": {"type": "string"}},
+          {"name": "filter[status]", "in": "query", "schema": {"type": "string"}},
+          {"name": "sort", "in": "query", "schema": {"type": "string"}},
+          {"name": "include", "in": "query", "schema": {"type": "string"}},
+          {"name": "page[number]", "in": "query", "schema": {"type": "integer"}},
+          {"name": "page[size]", "in": "query", "schema": {"type": "integer"}}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {"$ref": "#/components/schemas/ProductCollection"}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "required": ["type", "id", "attributes"],
+        "properties": {
+          "type": {"type": "string", "example": "products"},
+          "id": {"type": "string"},
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "code": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```

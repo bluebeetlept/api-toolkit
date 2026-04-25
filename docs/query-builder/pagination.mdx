@@ -1,0 +1,104 @@
+---
+title: Pagination
+description: Offset and cursor-based pagination
+---
+
+The QueryBuilder supports both offset and cursor-based pagination.
+
+## Offset pagination
+
+```php
+$products = QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->paginate();
+```
+
+**Query parameters:**
+- `?page[number]=2` - page number (default: 1)
+- `?page[size]=40` - items per page (default: 20, max: 100)
+
+**Response:**
+
+```json
+{
+  "data": [...],
+  "meta": {
+    "page": {
+      "currentPage": 2,
+      "lastPage": 5,
+      "perPage": 40,
+      "total": 200
+    }
+  },
+  "links": {
+    "first": "...?page[number]=1",
+    "last": "...?page[number]=5",
+    "prev": "...?page[number]=1",
+    "next": "...?page[number]=3"
+  }
+}
+```
+
+## Cursor pagination
+
+Best for feeds, infinite scroll, and large datasets:
+
+```php
+$products = QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->cursorPaginate();
+```
+
+**Query parameters:**
+- `?page[cursor]=eyJ...` - cursor value
+- `?page[size]=20` - items per page
+
+**Response:**
+
+```json
+{
+  "data": [...],
+  "meta": {
+    "page": {
+      "perPage": 20,
+      "hasMore": true
+    }
+  },
+  "links": {
+    "prev": "...?page[cursor]=eyJ...",
+    "next": "...?page[cursor]=eyJ..."
+  }
+}
+```
+
+## No pagination
+
+Use `get()` to retrieve all results without pagination:
+
+```php
+$products = QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->get();
+```
+
+## Configuration
+
+Pagination defaults are configured in `config/api-toolkit.php`:
+
+```php
+'pagination' => [
+    'default_size' => 20,   // Default page size
+    'max_size' => 100,       // Maximum allowed page size
+    'valid_sizes' => [10, 20, 40, 80, 100], // For ValidPageSize rule
+],
+```
+
+## When to use which?
+
+| | Offset | Cursor |
+|---|---|---|
+| **Use for** | Admin panels, tables with page numbers | Feeds, infinite scroll, large datasets |
+| **Performance** | Slower on large offsets | Consistent performance |
+| **Total count** | Available | Not available |
+| **Page jumping** | Yes (`?page[number]=50`) | No (sequential only) |
+| **Data consistency** | Can drift with inserts/deletes | Stable |

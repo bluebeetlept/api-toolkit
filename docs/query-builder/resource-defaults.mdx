@@ -1,0 +1,82 @@
+---
+title: Resource Defaults
+description: Let the Resource define query behavior
+---
+
+When you call `fromResource()`, the QueryBuilder reads all query configuration from the Resource:
+
+```php
+QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->paginate();
+```
+
+This is equivalent to:
+
+```php
+$resource = new ProductResource();
+
+QueryBuilder::for(Product::class, $request)
+    ->allowedFilters($resource->allowedFilters())
+    ->allowedSorts($resource->allowedSorts())
+    ->defaultSort($resource->defaultSort())
+    ->allowedIncludes($resource->allowedIncludes())
+    ->paginate();
+```
+
+## Request-aware defaults
+
+Since every Resource method has access to `$this->request`, your defaults can be context-aware:
+
+```php
+final class ProductResource extends Resource
+{
+    protected string $model = Product::class;
+
+    public function allowedFilters(): array
+    {
+        $filters = [
+            'name' => new PartialFilter(),
+            'status' => new ExactFilter(),
+        ];
+
+        // Admin-only filter
+        if ($this->request?->user()?->isAdmin()) {
+            $filters['internal_code'] = new ExactFilter();
+        }
+
+        return $filters;
+    }
+
+    public function allowedSorts(): array
+    {
+        $sorts = ['name', 'created_at'];
+
+        if ($this->request?->user()?->isAdmin()) {
+            $sorts[] = 'internal_priority';
+        }
+
+        return $sorts;
+    }
+
+    public function allowedIncludes(): array
+    {
+        $includes = ['category'];
+
+        if ($this->request?->user()?->can('viewSuppliers')) {
+            $includes[] = 'supplier';
+        }
+
+        return $includes;
+    }
+}
+```
+
+## What gets read from the Resource
+
+| Resource method | QueryBuilder equivalent | Fallback |
+|----------------|------------------------|----------|
+| `allowedFilters()` | `allowedFilters()` | `[]` (no filters) |
+| `allowedSorts()` | `allowedSorts()` | `[]` (no sorts) |
+| `defaultSort()` | `defaultSort()` | `null` (no default) |
+| `allowedIncludes()` | `allowedIncludes()` | Keys from `relationships()` |

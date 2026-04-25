@@ -1,0 +1,121 @@
+---
+title: Form Requests
+description: Extended form requests with strict parameter validation
+---
+
+The `FormRequest` base class extends Laravel's form request with two key features:
+
+1. **Query parameter validation** via `queryParamRules()`
+2. **Strict unknown parameter rejection** for both query params and form data
+
+## Usage
+
+```php
+use Eufaturo\ApiToolkit\Http\Requests\FormRequest;
+
+final class ListProductsRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function queryParamRules(): array
+    {
+        return [
+            'include' => ['string'],
+            'sort' => ['string'],
+        ];
+    }
+}
+```
+
+## Query parameter validation
+
+Define `queryParamRules()` to validate query string parameters separately from form data:
+
+```php
+public function queryParamRules(): array
+{
+    return [
+        'include' => [new ValidInclude(['category', 'supplier'])],
+        'page' => ['array'],
+        'page.size' => ['numeric', new ValidPageSize()],
+        'page.number' => ['numeric', 'min:1'],
+    ];
+}
+```
+
+### Custom messages and attributes
+
+```php
+public function queryParamMessages(): array
+{
+    return [
+        'page.size.numeric' => 'Page size must be a number.',
+    ];
+}
+
+public function queryParamAttributes(): array
+{
+    return [
+        'page.size' => 'page size',
+    ];
+}
+```
+
+## Strict parameter rejection
+
+Any query parameter or form field not defined in the rules is rejected with a 400 Bad Request:
+
+```
+GET /products?include=category&unknown=value
+```
+
+```json
+{
+  "errors": [
+    {
+      "status": "400",
+      "code": "invalid_request_error",
+      "title": "Bad Request",
+      "detail": "Received unknown parameter: unknown"
+    }
+  ]
+}
+```
+
+Multiple unknown parameters:
+
+```json
+{
+  "detail": "Received unknown parameters: unknown, another"
+}
+```
+
+This applies to both query parameters (via `queryParamRules()`) and form data (via `rules()`).
+
+## Form data validation
+
+Standard Laravel `rules()` work as expected, with the same strict rejection of unknown fields:
+
+```php
+public function rules(): array
+{
+    return [
+        'name' => ['required', 'string', 'min:3'],
+        'code' => ['required', 'string'],
+    ];
+}
+```
+
+```
+POST /products {"name": "Widget", "code": "W01", "unknown": "value"}
+→ 400 Bad Request: Received unknown parameter: unknown
+```
+
+## Validation order
+
+1. Query parameters are validated first
+2. Form data is validated second
+3. Laravel's built-in validation runs last

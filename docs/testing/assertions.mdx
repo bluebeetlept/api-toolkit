@@ -1,0 +1,129 @@
+---
+title: Assertions
+description: Available assertion methods for JSON:API testing
+---
+
+## TestResponse assertions
+
+These methods are available directly on the test response:
+
+### Error assertions
+
+```php
+$response->assertErrorTitle('Not Found');
+$response->assertErrorDetail('No such product: abc-123');
+$response->assertErrorDetailContains('product');
+$response->assertErrorCode('invalid_request_error');
+```
+
+### Resource assertions
+
+```php
+$response->assertResourceType('products');
+$response->assertResourceId('abc-123');
+```
+
+## TestDataResponse assertions
+
+These methods are available on the objects returned by `data()`, `errors()`, `included()`, and `meta()`:
+
+### Count
+
+```php
+$response->data()->assertCount(3);
+```
+
+### Value assertions
+
+```php
+$response->data()->assertSame('type', 'products');
+$response->data()->assertSame('attributes.name', 'Widget');
+$response->data()->assertNotSame('attributes.name', 'Gadget');
+```
+
+Dot notation is supported for nested keys.
+
+### Boolean assertions
+
+```php
+$response->data()->assertSame('attributes.active', true);
+$response->data()->assertTrue('attributes.active');
+$response->data()->assertFalse('attributes.archived');
+```
+
+### Null assertions
+
+```php
+$response->data()->assertNull('attributes.deleted_at');
+$response->data()->assertNotNull('attributes.created_at');
+```
+
+### Empty assertions
+
+```php
+$response->data()->assertEmpty();
+$response->data()->assertNotEmpty();
+```
+
+### Key existence
+
+```php
+$response->data()->assertHasKey('attributes.name');
+$response->data()->assertMissingKey('attributes.secret');
+```
+
+## Chaining
+
+All assertions return `$this`, so they can be chained:
+
+```php
+$response->data()
+    ->assertCount(1)
+    ->assertSame('0.type', 'products')
+    ->assertSame('0.attributes.name', 'Widget')
+    ->assertNotNull('0.attributes.created_at');
+```
+
+## Full example
+
+```php
+public function test_it_creates_a_product(): void
+{
+    $response = $this->postJson('/api/products', [
+        'name' => 'Widget',
+        'code' => 'W01',
+    ]);
+
+    $response->assertStatus(201);
+    $response->assertResourceType('products');
+    $response->data()
+        ->assertSame('attributes.name', 'Widget')
+        ->assertSame('attributes.code', 'W01')
+        ->assertNotNull('id');
+}
+
+public function test_it_validates_required_fields(): void
+{
+    $response = $this->postJson('/api/products', []);
+
+    $response->assertStatus(422);
+    $response->assertErrorCode('validation_error');
+    $response->errors()
+        ->assertNotEmpty()
+        ->assertSame('0.source.pointer', '/name');
+}
+
+public function test_it_lists_with_pagination(): void
+{
+    Product::factory()->count(50)->create();
+
+    $response = $this->getJson('/api/products?page[size]=20');
+
+    $response->assertStatus(200);
+    $response->data()->assertCount(20);
+    $response->meta()
+        ->assertSame('page.currentPage', 1)
+        ->assertSame('page.total', 50)
+        ->assertSame('page.perPage', 20);
+}
+```

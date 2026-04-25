@@ -1,0 +1,116 @@
+---
+title: Introduction
+description: JSON:API compliant toolkit for building REST APIs with Laravel
+---
+
+# API Toolkit
+
+API Toolkit is a Laravel package that provides a complete set of tools for building [JSON:API](https://jsonapi.org/) compliant REST APIs.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Resources" icon="cube" href="/resources/overview">
+    Transform models into JSON:API resource objects with type-safe attributes, relationships, links, and metadata. Supports constructor dependency injection.
+  </Card>
+  <Card title="Query Builder" icon="magnifying-glass" href="/query-builder/overview">
+    Fluent query builder that reads configuration from your Resource and applies filtering, sorting, includes, and pagination automatically.
+  </Card>
+  <Card title="Responses" icon="paper-plane" href="/responses/overview">
+    Build JSON:API compliant success and error responses with the correct content type and structure.
+  </Card>
+  <Card title="Parsers" icon="filter" href="/parsers/overview">
+    Individual parsers for JSON:API query parameters: `filter`, `sort`, `include`, `fields`, and `page`.
+  </Card>
+  <Card title="Exception Handling" icon="triangle-exclamation" href="/exceptions/overview">
+    Automatically convert Laravel exceptions into JSON:API error responses with configurable domain exceptions.
+  </Card>
+  <Card title="OpenAPI" icon="file-code" href="/openapi/overview">
+    Auto-generate OpenAPI 3.1 specs from your Resources. No annotations, no external dependencies.
+  </Card>
+  <Card title="Testing" icon="flask-vial" href="/testing/overview">
+    Test helpers with JSON:API aware assertions for resources, errors, and collections.
+  </Card>
+</CardGroup>
+
+## How it works
+
+Define a Resource that describes your model's API representation:
+
+```php
+final class ProductResource extends Resource
+{
+    protected string $model = Product::class;
+
+    public function __construct(
+        private readonly PricingService $pricing,
+    ) {
+    }
+
+    public function attributes(Product $product): array
+    {
+        return [
+            'name' => $product->name,
+            'price' => $this->pricing->calculate($product),
+        ];
+    }
+
+    public function self(Product $product): string | null
+    {
+        return route('api.v1.products.show', $product);
+    }
+}
+```
+
+Use the QueryBuilder and Response in your controller:
+
+```php
+final class ListController
+{
+    public function __invoke(Request $request, Response $response): JsonResponse
+    {
+        $products = QueryBuilder::for(Product::class, $request)
+            ->fromResource(ProductResource::class)
+            ->paginate();
+
+        return $response->success($products, ProductResource::class)->respond();
+    }
+}
+```
+
+## JSON:API response format
+
+Every response follows the [JSON:API specification](https://jsonapi.org/format/):
+
+```json
+{
+  "data": {
+    "type": "products",
+    "id": "abc-123",
+    "attributes": {
+      "name": "Widget",
+      "price": 9.99
+    },
+    "links": {
+      "self": "https://api.example.com/v1/products/abc-123"
+    }
+  }
+}
+```
+
+All responses use the `application/vnd.api+json` content type.
+
+## Supported query parameters
+
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `filter` | `?filter[status]=active` | Filter results by field values |
+| `sort` | `?sort=-created_at,name` | Sort results (prefix `-` for descending) |
+| `include` | `?include=category,supplier` | Include related resources |
+| `fields` | `?fields[products]=name,code` | Sparse fieldsets |
+| `page` | `?page[number]=2&page[size]=20` | Offset pagination |
+| `page` | `?page[cursor]=eyJ...&page[size]=20` | Cursor pagination |
+
+<Card title="Get started" icon="rocket" href="/quickstart">
+  Follow the quickstart guide to build your first JSON:API endpoint in minutes.
+</Card>

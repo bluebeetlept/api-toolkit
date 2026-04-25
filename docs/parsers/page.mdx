@@ -1,0 +1,63 @@
+---
+title: Page
+description: Parse pagination query parameters
+---
+
+The `PageParser` handles the `?page` query parameter, supporting both offset and cursor-based pagination.
+
+## Offset pagination
+
+```
+?page[number]=2&page[size]=40
+```
+
+## Cursor pagination
+
+```
+?page[cursor]=eyJpZCI6MTB9&page[size]=20
+```
+
+## Usage
+
+```php
+use Eufaturo\ApiToolkit\Parsers\PageParser;
+
+$parser = new PageParser(defaultSize: 20, maxSize: 100);
+
+$parser->getSize($request);    // 40 (from ?page[size]=40)
+$parser->getNumber($request);  // 2  (from ?page[number]=2)
+$parser->isCursor($request);   // false
+$parser->getCursor($request);  // null
+```
+
+## Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getSize()` | `int` | Page size, clamped between 1 and `maxSize` |
+| `getNumber()` | `int` | Page number for offset pagination (min: 1) |
+| `isCursor()` | `bool` | Whether the request uses cursor pagination |
+| `getCursor()` | `string\|null` | The cursor value, or null |
+
+## Configuration
+
+The `PageParser` is registered as a singleton and reads defaults from `config/api-toolkit.php`:
+
+```php
+'pagination' => [
+    'default_size' => 20,
+    'max_size' => 100,
+],
+```
+
+## Size clamping
+
+The page size is always clamped:
+- Minimum: `1`
+- Maximum: `maxSize` (default: 100)
+
+```
+?page[size]=0    → 1
+?page[size]=500  → 100
+?page[size]=40   → 40
+```

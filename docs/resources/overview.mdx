@@ -1,0 +1,150 @@
+---
+title: Overview
+description: Transform your data into JSON:API resource objects
+---
+
+Resources are the core building block of API Toolkit. They define how your data is serialized into [JSON:API resource objects](https://jsonapi.org/format/#document-resource-objects).
+
+## Basic structure
+
+```php
+use Eufaturo\ApiToolkit\Resources\Resource;
+use App\Models\Product;
+
+final class ProductResource extends Resource
+{
+    protected string $model = Product::class;
+
+    public function attributes(Product $product): array
+    {
+        return [
+            'name' => $product->name,
+            'code' => $product->code,
+        ];
+    }
+
+    public function self(Product $product): string | null
+    {
+        return route('api.v1.products.show', $product);
+    }
+}
+```
+
+This produces:
+
+```json
+{
+  "type": "products",
+  "id": "abc-123",
+  "attributes": {
+    "name": "Widget",
+    "code": "W01"
+  },
+  "links": {
+    "self": "https://api.example.com/v1/products/abc-123"
+  }
+}
+```
+
+## Key concepts
+
+<CardGroup cols={2}>
+  <Card title="Attributes" icon="list" href="/resources/defining-resources">
+    Define which fields to include, type-hint your model, and use the request context.
+  </Card>
+  <Card title="Links & Meta" icon="link" href="/resources/links-and-meta">
+    Add self links, additional links, and metadata using `route()`, `url()`, or any helper.
+  </Card>
+  <Card title="Relationships" icon="diagram-project" href="/resources/relationships">
+    Define related resources and control eager loading via `?include`.
+  </Card>
+  <Card title="Collections" icon="layer-group" href="/resources/collections">
+    Serialize arrays, collections, and paginated results with automatic pagination metadata.
+  </Card>
+  <Card title="Dependency Injection" icon="syringe" href="/resources/dependency-injection">
+    Inject services into your resources via constructor injection.
+  </Card>
+</CardGroup>
+
+## Model and type
+
+### With a model
+
+Set `$model` to an Eloquent model class. The JSON:API `type` is automatically derived from the model's table name:
+
+```php
+final class ProductResource extends Resource
+{
+    protected string $model = Product::class;
+    // type = "products" (from Product's table name)
+}
+```
+
+### Without a model
+
+For non-model data, set `$type` directly and type-hint whatever you need:
+
+```php
+final class DateResource extends Resource
+{
+    protected string $type = 'dates';
+
+    public function attributes(CarbonInterface $date): array
+    {
+        return [
+            'human' => $date->diffForHumans(),
+            'timestamp' => $date->timestamp,
+        ];
+    }
+}
+```
+
+### Overriding the type
+
+You can set both `$model` and `$type`. The explicit `$type` takes precedence:
+
+```php
+final class LegacyProductResource extends Resource
+{
+    protected string $model = Product::class;
+    protected string $type = 'legacy-products'; // overrides table name
+}
+```
+
+### Type resolution order
+
+1. `$type` if explicitly set
+2. `$model` table name if set
+3. Runtime model's table name (for Eloquent models passed at runtime)
+4. Snake-cased class name as fallback
+
+## Request access
+
+The current request is available as `$this->request` on all Resource methods. It is set automatically when the resource is resolved through `Response`, `QueryBuilder`, or `ResourceCollection`:
+
+```php
+public function attributes(Product $product): array
+{
+    return [
+        'name' => $product->name,
+        'is_owner' => $this->request?->user()?->is($product->owner),
+    ];
+}
+```
+
+Since the request is a property, you don't need to declare it in every method signature.
+
+## Static `make()` helper
+
+For inline transformations (e.g., nested attributes), use the static `make()` method:
+
+```php
+public function attributes(Product $product): array
+{
+    return [
+        'name' => $product->name,
+        'price' => MoneyResource::make($product->price_in_cents, $product->currencies),
+        'created_at' => DateResource::make($product->created_at),
+    ];
+}
+```

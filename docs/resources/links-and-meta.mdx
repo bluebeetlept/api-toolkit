@@ -1,0 +1,108 @@
+---
+title: Links & Meta
+description: Add self links, additional links, and metadata to your resources
+---
+
+## Self link
+
+Define the `self()` method to generate the resource's self link. Use Laravel's `route()`, `url()`, or any URL helper:
+
+```php
+public function self(Product $product): string | null
+{
+    return route('api.v1.products.show', $product);
+}
+```
+
+Returns `null` by default, which omits the self link. Override to include one.
+
+Output:
+
+```json
+{
+  "links": {
+    "self": "https://api.example.com/v1/products/abc-123"
+  }
+}
+```
+
+## Additional links
+
+Use `links()` to add extra links beyond `self`:
+
+```php
+public function links(Product $product): array
+{
+    return [
+        'inventory' => route('api.v1.products.inventory', $product),
+        'related' => route('api.v1.products.related', $product),
+    ];
+}
+```
+
+Both `self()` and `links()` are merged in the output. If `links()` defines a `self` key, it takes precedence over the `self()` method.
+
+## Conditional links
+
+Since every method has access to `$this->request`, you can conditionally include links:
+
+```php
+public function links(Product $product): array
+{
+    $links = [];
+
+    if ($this->request?->user()?->can('update', $product)) {
+        $links['edit'] = route('api.v1.products.edit', $product);
+    }
+
+    return $links;
+}
+```
+
+## Meta
+
+Add resource-level metadata with the `meta()` method:
+
+```php
+public function meta(Product $product): array
+{
+    return [
+        'permissions' => [
+            'can_edit' => $this->request?->user()?->can('update', $product),
+            'can_delete' => $this->request?->user()?->can('delete', $product),
+        ],
+    ];
+}
+```
+
+Output:
+
+```json
+{
+  "data": {
+    "type": "products",
+    "id": "abc-123",
+    "attributes": { ... },
+    "meta": {
+      "permissions": {
+        "can_edit": true,
+        "can_delete": false
+      }
+    }
+  }
+}
+```
+
+## Response-level meta and links
+
+In addition to resource-level links and meta, you can add response-level meta and links via the `Response` class:
+
+```php
+return $response
+    ->success($products, ProductResource::class)
+    ->meta(['request_id' => $requestId])
+    ->links(['documentation' => 'https://docs.example.com/products'])
+    ->respond();
+```
+
+These are added to the top-level JSON:API document, separate from the individual resource objects.

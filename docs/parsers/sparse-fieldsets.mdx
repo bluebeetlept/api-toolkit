@@ -1,0 +1,62 @@
+---
+title: Sparse Fieldsets
+description: Parse sparse fieldset query parameters
+---
+
+The `FieldParser` handles the `?fields` query parameter following the [JSON:API sparse fieldsets specification](https://jsonapi.org/format/#fetching-sparse-fieldsets).
+
+## Format
+
+```
+?fields[products]=name,code
+?fields[products]=name,code&fields[categories]=name
+```
+
+Each resource type has its own field list.
+
+## Usage
+
+```php
+use Eufaturo\ApiToolkit\Parsers\FieldParser;
+
+$parser = new FieldParser();
+
+$fields = $parser->parse($request);
+// ['products' => ['name', 'code'], 'categories' => ['name']]
+```
+
+## Filtering attributes
+
+Use the `filter()` method to apply sparse fieldsets to an attributes array:
+
+```php
+$attributes = [
+    'name' => 'Widget',
+    'code' => 'W01',
+    'description' => 'A fine widget',
+];
+
+$filtered = $parser->filter($attributes, $fields['products'] ?? null);
+// ['name' => 'Widget', 'code' => 'W01']
+```
+
+When `$fields` is `null` or empty, all attributes are returned.
+
+## Using in a Resource
+
+You can use the `FieldParser` inside your resource's `attributes()` method:
+
+```php
+public function attributes(Product $product): array
+{
+    $fields = (new FieldParser())->parse(request());
+
+    $attributes = [
+        'name' => $product->name,
+        'code' => $product->code,
+        'description' => $product->description,
+    ];
+
+    return (new FieldParser())->filter($attributes, $fields['products'] ?? null);
+}
+```
