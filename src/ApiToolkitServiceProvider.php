@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Eufaturo\ApiToolkit;
 
 use Eufaturo\ApiToolkit\Console\GenerateOpenApiCommand;
+use Eufaturo\ApiToolkit\Console\MakeResourceCommand;
 use Eufaturo\ApiToolkit\Http\Response;
 use Eufaturo\ApiToolkit\Parsers\PageParser;
 use Eufaturo\IdempotencyMiddleware\IdempotencyServiceProvider;
@@ -36,6 +37,7 @@ final class ApiToolkitServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 GenerateOpenApiCommand::class,
+                MakeResourceCommand::class,
             ]);
         }
 

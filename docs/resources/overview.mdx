@@ -46,6 +46,40 @@ This produces:
 }
 ```
 
+## Generating resources
+
+Use the artisan command to scaffold a new resource:
+
+```bash
+php artisan api-toolkit:make-resource ProductResource
+```
+
+This creates `app/Http/Resources/ProductResource.php` with the model auto-guessed from the name (`Product`):
+
+```php
+final class ProductResource extends Resource
+{
+    protected string $model = Product::class;
+
+    public function attributes(Product $product): array
+    {
+        return [
+            //
+        ];
+    }
+}
+```
+
+### Options
+
+```bash
+# Explicit model class
+php artisan api-toolkit:make-resource ProductResource --model=App\\Models\\Product
+
+# Plain resource without a model (uses $type instead of $model)
+php artisan api-toolkit:make-resource DateResource --plain
+```
+
 ## Key concepts
 
 <CardGroup cols={2}>
