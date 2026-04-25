@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\OpenApi;
+namespace BlueBeetle\ApiToolkit\OpenApi;
 
 use Illuminate\Support\Str;
 use Throwable;

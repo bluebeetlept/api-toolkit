@@ -2,11 +2,11 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Acceptance\Http\Requests;
+namespace BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests;
 
-use Eufaturo\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithFormInputRules;
-use Eufaturo\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithQueryParamRules;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithFormInputRules;
+use BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithQueryParamRules;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

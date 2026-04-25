@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Feature\Parsers;
+namespace BlueBeetle\ApiToolkit\Tests\Feature\Parsers;
 
-use Eufaturo\ApiToolkit\Parsers\FilterParser;
-use Eufaturo\ApiToolkit\Parsers\Filters\ExactFilter;
-use Eufaturo\ApiToolkit\Parsers\Filters\PartialFilter;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Product;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Parsers\FilterParser;
+use BlueBeetle\ApiToolkit\Parsers\Filters\ExactFilter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\PartialFilter;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

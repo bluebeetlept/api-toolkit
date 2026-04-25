@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "eufaturo/api-toolkit",
+    "name": "bluebeetlept/api-toolkit",
     "type": "library",
     "description": "JSON:API compliant toolkit for building REST APIs with Laravel.",
     "keywords": [
@@ -28,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Eufaturo\\ApiToolkit\\": "src/"
+            "BlueBeetle\\ApiToolkit\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Eufaturo\\ApiToolkit\\Tests\\": "tests/"
+            "BlueBeetle\\ApiToolkit\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -64,7 +64,7 @@
         },
         "laravel": {
             "providers": [
-                "Eufaturo\\ApiToolkit\\ApiToolkitServiceProvider"
+                "BlueBeetle\\ApiToolkit\\ApiToolkitServiceProvider"
             ]
         }
     },

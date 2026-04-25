@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Testing;
+namespace BlueBeetle\ApiToolkit\Testing;
 
 use Illuminate\Testing\LoggedExceptionCollection;
 

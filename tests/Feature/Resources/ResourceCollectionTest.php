@@ -2,11 +2,11 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Feature\Resources;
+namespace BlueBeetle\ApiToolkit\Tests\Feature\Resources;
 
-use Eufaturo\ApiToolkit\Resources\Resource;
-use Eufaturo\ApiToolkit\Resources\ResourceCollection;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Resources\ResourceCollection;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\Attributes\Test;

@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Feature\Rules;
+namespace BlueBeetle\ApiToolkit\Tests\Feature\Rules;
 
-use Eufaturo\ApiToolkit\Rules\ValidInclude;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Rules\ValidInclude;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Support\Facades\Validator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

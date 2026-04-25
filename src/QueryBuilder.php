@@ -2,17 +2,17 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit;
+namespace BlueBeetle\ApiToolkit;
 
-use Eufaturo\ApiToolkit\Http\SuccessResponse;
-use Eufaturo\ApiToolkit\Pagination\CursorPaginator;
-use Eufaturo\ApiToolkit\Pagination\OffsetPaginator;
-use Eufaturo\ApiToolkit\Parsers\FilterParser;
-use Eufaturo\ApiToolkit\Parsers\Filters\Filter;
-use Eufaturo\ApiToolkit\Parsers\IncludeParser;
-use Eufaturo\ApiToolkit\Parsers\PageParser;
-use Eufaturo\ApiToolkit\Parsers\SortParser;
-use Eufaturo\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Http\SuccessResponse;
+use BlueBeetle\ApiToolkit\Pagination\CursorPaginator;
+use BlueBeetle\ApiToolkit\Pagination\OffsetPaginator;
+use BlueBeetle\ApiToolkit\Parsers\FilterParser;
+use BlueBeetle\ApiToolkit\Parsers\Filters\Filter;
+use BlueBeetle\ApiToolkit\Parsers\IncludeParser;
+use BlueBeetle\ApiToolkit\Parsers\PageParser;
+use BlueBeetle\ApiToolkit\Parsers\SortParser;
+use BlueBeetle\ApiToolkit\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;

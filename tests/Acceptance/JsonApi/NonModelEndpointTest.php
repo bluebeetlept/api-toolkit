@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Acceptance\JsonApi;
+namespace BlueBeetle\ApiToolkit\Tests\Acceptance\JsonApi;
 
 use Carbon\Carbon;
-use Eufaturo\ApiToolkit\Http\Response;
-use Eufaturo\ApiToolkit\Resources\Resource;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Http\Response;
+use BlueBeetle\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

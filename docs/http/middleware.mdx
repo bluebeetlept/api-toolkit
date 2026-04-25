@@ -8,7 +8,7 @@ description: HTTP middleware for API responses and localization
 Sets the `Content-Type` header to `application/vnd.api+json` on all responses:
 
 ```php
-use Eufaturo\ApiToolkit\Http\Middleware\ForceJsonApiResponse;
+use BlueBeetle\ApiToolkit\Http\Middleware\ForceJsonApiResponse;
 ```
 
 Register in your middleware stack:
@@ -26,7 +26,7 @@ Register in your middleware stack:
 Reads the `Language` header from the request and sets the application locale:
 
 ```php
-use Eufaturo\ApiToolkit\Http\Middleware\DetectLanguage;
+use BlueBeetle\ApiToolkit\Http\Middleware\DetectLanguage;
 ```
 
 ### Configuration

@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Parsers;
+namespace BlueBeetle\ApiToolkit\Parsers;
 
-use Eufaturo\ApiToolkit\Parsers\Filters\Filter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Parsers;
+namespace BlueBeetle\ApiToolkit\Parsers;
 
 use Illuminate\Http\Request;
 

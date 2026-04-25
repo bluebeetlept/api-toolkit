@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Http;
+namespace BlueBeetle\ApiToolkit\Http;
 
-use Eufaturo\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Resources\Resource;
 use Illuminate\Http\Request;
 
 final readonly class Response

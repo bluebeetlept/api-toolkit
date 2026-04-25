@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Parsers\Filters;
+namespace BlueBeetle\ApiToolkit\Parsers\Filters;
 
 use Illuminate\Database\Eloquent\Builder;
 

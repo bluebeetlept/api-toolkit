@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Feature\Parsers;
+namespace BlueBeetle\ApiToolkit\Tests\Feature\Parsers;
 
-use Eufaturo\ApiToolkit\Parsers\Filters\ScopeFilter;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Parsers\Filters\ScopeFilter;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Database\Eloquent\Builder;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

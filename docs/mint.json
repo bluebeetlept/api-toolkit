@@ -14,18 +14,18 @@
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:support@eufaturo.com"
+      "url": "mailto:support@bluebeetle.pt"
     }
   ],
   "topbarCtaButton": {
     "name": "GitHub",
-    "url": "https://github.com/eufaturo/api-toolkit"
+    "url": "https://github.com/bluebeetlept/api-toolkit"
   },
   "anchors": [
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/eufaturo/api-toolkit"
+      "url": "https://github.com/bluebeetlept/api-toolkit"
     }
   ],
   "navigation": [
@@ -108,6 +108,6 @@
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/eufaturo/api-toolkit"
+    "github": "https://github.com/bluebeetlept/api-toolkit"
   }
 }

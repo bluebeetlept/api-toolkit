@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Fixtures\Resources;
+namespace BlueBeetle\ApiToolkit\Tests\Fixtures\Resources;
 
 use Carbon\CarbonInterface;
-use Eufaturo\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Resources\Resource;
 
 final class TimestampResource extends Resource
 {

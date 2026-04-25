@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Fixtures\Resources;
+namespace BlueBeetle\ApiToolkit\Tests\Fixtures\Resources;
 
-use Eufaturo\ApiToolkit\Parsers\Filters\ExactFilter;
-use Eufaturo\ApiToolkit\Parsers\Filters\PartialFilter;
-use Eufaturo\ApiToolkit\Resources\Resource;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Product;
+use BlueBeetle\ApiToolkit\Parsers\Filters\ExactFilter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\PartialFilter;
+use BlueBeetle\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
 
 final class ProductResource extends Resource
 {

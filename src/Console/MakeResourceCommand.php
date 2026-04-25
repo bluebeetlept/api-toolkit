@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Console;
+namespace BlueBeetle\ApiToolkit\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -68,7 +68,7 @@ final class MakeResourceCommand extends Command
 
             namespace App\Http\Resources;
 
-            use Eufaturo\ApiToolkit\Resources\Resource;
+            use BlueBeetle\ApiToolkit\Resources\Resource;
             use {$modelImport};
 
             final class {$resourceClass} extends Resource
@@ -95,7 +95,7 @@ final class MakeResourceCommand extends Command
 
             namespace App\Http\Resources;
 
-            use Eufaturo\ApiToolkit\Resources\Resource;
+            use BlueBeetle\ApiToolkit\Resources\Resource;
 
             final class {$resourceClass} extends Resource
             {

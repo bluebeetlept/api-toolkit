@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Acceptance;
+namespace BlueBeetle\ApiToolkit\Tests\Acceptance;
 
-use Eufaturo\ApiToolkit\Exceptions\ConfigureExceptionHandler;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Exceptions\ConfigureExceptionHandler;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;

@@ -8,7 +8,7 @@ description: Configure exception handling behavior
 Configure the exception handler in your application's bootstrap:
 
 ```php bootstrap/app.php
-use Eufaturo\ApiToolkit\Exceptions\ConfigureExceptionHandler;
+use BlueBeetle\ApiToolkit\Exceptions\ConfigureExceptionHandler;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(new ConfigureExceptionHandler())

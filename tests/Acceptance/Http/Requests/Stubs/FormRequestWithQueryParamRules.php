@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs;
+namespace BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs;
 
-use Eufaturo\ApiToolkit\Http\Requests\FormRequest;
+use BlueBeetle\ApiToolkit\Http\Requests\FormRequest;
 
 final class FormRequestWithQueryParamRules extends FormRequest
 {

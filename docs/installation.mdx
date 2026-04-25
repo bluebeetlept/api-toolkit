@@ -11,7 +11,7 @@ description: How to install and configure API Toolkit
 ## Install via Composer
 
 ```bash
-composer require eufaturo/api-toolkit:^1.0@dev
+composer require bluebeetlept/api-toolkit:^1.0@dev
 ```
 
 The package auto-discovers its service provider via Laravel's package discovery.
@@ -44,7 +44,7 @@ return [
 To enable JSON:API exception rendering, configure it in your application's bootstrap:
 
 ```php bootstrap/app.php
-use Eufaturo\ApiToolkit\Exceptions\ConfigureExceptionHandler;
+use BlueBeetle\ApiToolkit\Exceptions\ConfigureExceptionHandler;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(new ConfigureExceptionHandler())
@@ -56,8 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
 Register the middleware in your API route group:
 
 ```php bootstrap/app.php
-use Eufaturo\ApiToolkit\Http\Middleware\ForceJsonApiResponse;
-use Eufaturo\ApiToolkit\Http\Middleware\DetectLanguage;
+use BlueBeetle\ApiToolkit\Http\Middleware\ForceJsonApiResponse;
+use BlueBeetle\ApiToolkit\Http\Middleware\DetectLanguage;
 
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->api(prepend: [

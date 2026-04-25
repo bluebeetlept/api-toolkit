@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\OpenApi;
+namespace BlueBeetle\ApiToolkit\OpenApi;
 
-use Eufaturo\ApiToolkit\Parsers\Filters\DateFilter;
-use Eufaturo\ApiToolkit\Parsers\Filters\ExactFilter;
-use Eufaturo\ApiToolkit\Parsers\Filters\PartialFilter;
-use Eufaturo\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Parsers\Filters\DateFilter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\ExactFilter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\PartialFilter;
+use BlueBeetle\ApiToolkit\Resources\Resource;
 use Illuminate\Database\Eloquent\Model;
 
 final class SchemaBuilder

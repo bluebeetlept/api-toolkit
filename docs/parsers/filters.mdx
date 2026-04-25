@@ -8,9 +8,9 @@ The `FilterParser` handles `?filter[field]=value` query parameters and applies t
 ## Usage
 
 ```php
-use Eufaturo\ApiToolkit\Parsers\FilterParser;
-use Eufaturo\ApiToolkit\Parsers\Filters\ExactFilter;
-use Eufaturo\ApiToolkit\Parsers\Filters\PartialFilter;
+use BlueBeetle\ApiToolkit\Parsers\FilterParser;
+use BlueBeetle\ApiToolkit\Parsers\Filters\ExactFilter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\PartialFilter;
 
 $parser = new FilterParser([
     'status' => new ExactFilter(),
@@ -83,7 +83,7 @@ Delegates to an Eloquent scope on the model:
 Implement the `Filter` interface to create your own:
 
 ```php
-use Eufaturo\ApiToolkit\Parsers\Filters\Filter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 
 final readonly class JsonContainsFilter implements Filter

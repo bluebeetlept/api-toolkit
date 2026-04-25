@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Fixtures\Resources;
+namespace BlueBeetle\ApiToolkit\Tests\Fixtures\Resources;
 
-use Eufaturo\ApiToolkit\Resources\Resource;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Category;
+use BlueBeetle\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Category;
 
 final class CategoryResource extends Resource
 {

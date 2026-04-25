@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests;
+namespace BlueBeetle\ApiToolkit\Tests;
 
-use Eufaturo\ApiToolkit\ApiToolkitServiceProvider;
+use BlueBeetle\ApiToolkit\ApiToolkitServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 

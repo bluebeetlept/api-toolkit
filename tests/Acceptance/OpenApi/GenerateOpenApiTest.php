@@ -2,15 +2,15 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Acceptance\OpenApi;
+namespace BlueBeetle\ApiToolkit\Tests\Acceptance\OpenApi;
 
-use Eufaturo\ApiToolkit\Http\Response;
-use Eufaturo\ApiToolkit\OpenApi\DocumentBuilder;
-use Eufaturo\ApiToolkit\OpenApi\RouteScanner;
-use Eufaturo\ApiToolkit\QueryBuilder;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Product;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Http\Response;
+use BlueBeetle\ApiToolkit\OpenApi\DocumentBuilder;
+use BlueBeetle\ApiToolkit\OpenApi\RouteScanner;
+use BlueBeetle\ApiToolkit\QueryBuilder;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;

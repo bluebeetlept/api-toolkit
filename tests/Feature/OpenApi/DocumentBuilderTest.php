@@ -2,11 +2,11 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Feature\OpenApi;
+namespace BlueBeetle\ApiToolkit\Tests\Feature\OpenApi;
 
-use Eufaturo\ApiToolkit\OpenApi\DocumentBuilder;
-use Eufaturo\ApiToolkit\OpenApi\EndpointDefinition;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\OpenApi\DocumentBuilder;
+use BlueBeetle\ApiToolkit\OpenApi\EndpointDefinition;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Pagination;
+namespace BlueBeetle\ApiToolkit\Pagination;
 
-use Eufaturo\ApiToolkit\Parsers\PageParser;
+use BlueBeetle\ApiToolkit\Parsers\PageParser;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;

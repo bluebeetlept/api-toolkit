@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Http;
+namespace BlueBeetle\ApiToolkit\Http;
 
 use Illuminate\Http\JsonResponse;
 

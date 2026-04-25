@@ -2,11 +2,11 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Resources;
+namespace BlueBeetle\ApiToolkit\Resources;
 
 use BadMethodCallException;
 use Closure;
-use Eufaturo\ApiToolkit\Parsers\Filters\Filter;
+use BlueBeetle\ApiToolkit\Parsers\Filters\Filter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;

@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\OpenApi;
+namespace BlueBeetle\ApiToolkit\OpenApi;
 
-use Eufaturo\ApiToolkit\QueryBuilder;
-use Eufaturo\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\QueryBuilder;
+use BlueBeetle\ApiToolkit\Resources\Resource;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Collection;

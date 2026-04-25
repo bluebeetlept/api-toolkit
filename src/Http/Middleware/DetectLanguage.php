@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Http\Middleware;
+namespace BlueBeetle\ApiToolkit\Http\Middleware;
 
 use Closure;
 use Illuminate\Contracts\Config\Repository as Config;

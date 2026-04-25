@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Acceptance\JsonApi;
+namespace BlueBeetle\ApiToolkit\Tests\Acceptance\JsonApi;
 
-use Eufaturo\ApiToolkit\Http\Response;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Category;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Models\Product;
-use Eufaturo\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Http\Response;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Category;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

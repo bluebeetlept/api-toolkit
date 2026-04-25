@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Exceptions;
+namespace BlueBeetle\ApiToolkit\Exceptions;
 
 use Eufaturo\IdempotencyMiddleware\IdempotencyException;
 use Illuminate\Auth\AuthenticationException;

@@ -8,7 +8,7 @@ Resources are the core building block of API Toolkit. They define how your data 
 ## Basic structure
 
 ```php
-use Eufaturo\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Resources\Resource;
 use App\Models\Product;
 
 final class ProductResource extends Resource
@@ -167,7 +167,7 @@ Register global callbacks to customize how IDs and types are derived across all 
 Register in a service provider:
 
 ```php
-use Eufaturo\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Resources\Resource;
 use Illuminate\Support\Str;
 
 // Use UUID as the resource ID

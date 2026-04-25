@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Tests\Acceptance\Http\Middleware;
+namespace BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Middleware;
 
-use Eufaturo\ApiToolkit\Http\Middleware\ForceJsonApiResponse;
-use Eufaturo\ApiToolkit\Tests\TestCase;
+use BlueBeetle\ApiToolkit\Http\Middleware\ForceJsonApiResponse;
+use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

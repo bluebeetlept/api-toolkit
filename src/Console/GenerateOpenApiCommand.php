@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Console;
+namespace BlueBeetle\ApiToolkit\Console;
 
-use Eufaturo\ApiToolkit\OpenApi\DocumentBuilder;
-use Eufaturo\ApiToolkit\OpenApi\RouteScanner;
+use BlueBeetle\ApiToolkit\OpenApi\DocumentBuilder;
+use BlueBeetle\ApiToolkit\OpenApi\RouteScanner;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as Config;
 

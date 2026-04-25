@@ -5,7 +5,7 @@ JSON:API compliant toolkit for building REST APIs with Laravel.
 ## Installation
 
 ```shell
-composer require eufaturo/api-toolkit:^1.0@dev
+composer require bluebeetlept/api-toolkit:^1.0@dev
 ```
 
 ## Quick Start

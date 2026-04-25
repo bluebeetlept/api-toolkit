@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Eufaturo\ApiToolkit\Rules;
+namespace BlueBeetle\ApiToolkit\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
