@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Eufaturo\ApiToolkit\Resources;
 
 use BadMethodCallException;
+use Closure;
 use Eufaturo\ApiToolkit\Parsers\Filters\Filter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -22,6 +23,12 @@ use Illuminate\Support\Str;
  */
 class Resource
 {
+    /** @var (Closure(mixed, Request|null): string)|null */
+    private static Closure | null $idResolver = null;
+
+    /** @var (Closure(mixed, Request|null): string)|null */
+    private static Closure | null $typeResolver = null;
+
     /**
      * The model class this resource represents.
      * When set to an Eloquent model, the JSON:API type is derived from its table name.
@@ -39,6 +46,35 @@ class Resource
      * The current request instance, available in all methods via $this->request.
      */
     protected Request | null $request = null;
+
+    /**
+     * Register a global callback to resolve the resource ID.
+     *
+     * @param Closure(mixed, Request|null): string $callback
+     */
+    public static function resolveIdUsing(Closure $callback): void
+    {
+        self::$idResolver = $callback;
+    }
+
+    /**
+     * Register a global callback to resolve the resource type.
+     *
+     * @param Closure(mixed, Request|null): string $callback
+     */
+    public static function resolveTypeUsing(Closure $callback): void
+    {
+        self::$typeResolver = $callback;
+    }
+
+    /**
+     * Reset global resolvers (useful for testing).
+     */
+    public static function resetResolvers(): void
+    {
+        self::$idResolver = null;
+        self::$typeResolver = null;
+    }
 
     public static function make(mixed ...$data): array | null
     {
@@ -153,6 +189,10 @@ class Resource
             return $this->type;
         }
 
+        if (self::$typeResolver !== null && $model !== null) {
+            return (self::$typeResolver)($model, $this->request);
+        }
+
         if ($this->model !== '') {
             return (new $this->model())->getTable();
         }
@@ -170,6 +210,10 @@ class Resource
 
     public function resolveId($model): string
     {
+        if (self::$idResolver !== null) {
+            return (self::$idResolver)($model, $this->request);
+        }
+
         if ($model instanceof Model) {
             return (string) ($model->public_id ?? $model->getKey());
         }

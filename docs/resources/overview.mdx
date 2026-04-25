@@ -114,9 +114,44 @@ final class LegacyProductResource extends Resource
 ### Type resolution order
 
 1. `$type` if explicitly set
-2. `$model` table name if set
-3. Runtime model's table name (for Eloquent models passed at runtime)
-4. Snake-cased class name as fallback
+2. Global type resolver (if registered)
+3. `$model` table name if set
+4. Runtime model's table name (for Eloquent models passed at runtime)
+5. Snake-cased class name as fallback
+
+### ID resolution order
+
+1. Global ID resolver (if registered)
+2. `$model->public_id` (for Eloquent models)
+3. `$model->getKey()` (for Eloquent models)
+4. `$model->id` or `$model->public_id` (for plain objects)
+
+## Global resolvers
+
+Register global callbacks to customize how IDs and types are derived across all resources. Useful for projects that use UUIDs, hashids, or custom naming conventions.
+
+Register in a service provider:
+
+```php
+use Eufaturo\ApiToolkit\Resources\Resource;
+use Illuminate\Support\Str;
+
+// Use UUID as the resource ID
+Resource::resolveIdUsing(fn ($model) => $model->uuid);
+
+// Use snake-cased class name as the type
+Resource::resolveTypeUsing(fn ($model) => Str::snake(class_basename($model)));
+```
+
+The callback receives the model and the current request:
+
+```php
+Resource::resolveIdUsing(function ($model, ?Request $request) {
+    return $model->uuid;
+});
+```
+
+Explicit `$type` on a resource always takes precedence over the global resolver. Reset both resolvers with `Resource::resetResolvers()`.
 
 ## Request access
 
