@@ -234,4 +234,101 @@ final class ResourceTest extends TestCase
         $this->assertArrayNotHasKey('self', $result['links']);
         $this->assertSame('/related/1', $result['links']['related']);
     }
+
+    #[Test]
+    #[TestDox('it uses global ID resolver')]
+    public function it_uses_global_id_resolver(): void
+    {
+        Resource::resolveIdUsing(fn ($model) => 'custom-'.$model->id);
+
+        $resource = new class() extends Resource {
+            protected string $type = 'items';
+
+            public function attributes($model): array
+            {
+                return [];
+            }
+        };
+
+        $model = new stdClass();
+        $model->id = '42';
+
+        $result = $resource->toArray($model);
+
+        $this->assertSame('custom-42', $result['id']);
+
+        Resource::resetResolvers();
+    }
+
+    #[Test]
+    #[TestDox('it uses global type resolver')]
+    public function it_uses_global_type_resolver(): void
+    {
+        Resource::resolveTypeUsing(fn ($model) => 'custom-type');
+
+        $resource = new class() extends Resource {
+            public function attributes($model): array
+            {
+                return [];
+            }
+        };
+
+        $model = new stdClass();
+        $model->id = '1';
+
+        $result = $resource->toArray($model);
+
+        $this->assertSame('custom-type', $result['type']);
+
+        Resource::resetResolvers();
+    }
+
+    #[Test]
+    #[TestDox('explicit type property takes precedence over global resolver')]
+    public function explicit_type_takes_precedence(): void
+    {
+        Resource::resolveTypeUsing(fn ($model) => 'global-type');
+
+        $resource = new class() extends Resource {
+            protected string $type = 'explicit-type';
+
+            public function attributes($model): array
+            {
+                return [];
+            }
+        };
+
+        $model = new stdClass();
+        $model->id = '1';
+
+        $result = $resource->toArray($model);
+
+        $this->assertSame('explicit-type', $result['type']);
+
+        Resource::resetResolvers();
+    }
+
+    #[Test]
+    #[TestDox('reset resolvers restores default behavior')]
+    public function reset_resolvers_restores_defaults(): void
+    {
+        Resource::resolveIdUsing(fn ($model) => 'custom');
+        Resource::resetResolvers();
+
+        $resource = new class() extends Resource {
+            protected string $type = 'items';
+
+            public function attributes($model): array
+            {
+                return [];
+            }
+        };
+
+        $model = new stdClass();
+        $model->id = '99';
+
+        $result = $resource->toArray($model);
+
+        $this->assertSame('99', $result['id']);
+    }
 }
