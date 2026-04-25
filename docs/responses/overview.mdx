@@ -20,6 +20,24 @@ final class ProductController
 }
 ```
 
+## Responsable
+
+Both `SuccessResponse` and `ErrorResponse` implement Laravel's `Responsable` interface. You can return them directly from controllers without calling `->respond()`:
+
+```php
+// No ->respond() needed
+return $this->response->success($product, ProductResource::class);
+
+// Also works with errors
+return $this->response->error('Not Found', 'Product does not exist', 404);
+```
+
+Use `->respond()` when you need a custom status code or headers:
+
+```php
+return $this->response->success($product, ProductResource::class)->respond(201);
+```
+
 ## Inject via constructor
 
 The `Response` class is registered as a singleton in the service container. Inject it via constructor dependency injection:

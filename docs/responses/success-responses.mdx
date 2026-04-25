@@ -3,10 +3,12 @@ title: Success Responses
 description: Build JSON:API success responses with data, meta, and links
 ---
 
+`SuccessResponse` implements Laravel's `Responsable` interface. You can return it directly from controllers without calling `->respond()`.
+
 ## Single resource
 
 ```php
-return $this->response->success($product, ProductResource::class)->respond();
+return $this->response->success($product, ProductResource::class);
 ```
 
 ```json
@@ -29,13 +31,25 @@ Pass an array, `Collection`, or paginator:
 ```php
 $products = Product::query()->paginate(20);
 
-return $this->response->success($products, ProductResource::class)->respond();
+return $this->response->success($products, ProductResource::class);
 ```
+
+## Via QueryBuilder
+
+The QueryBuilder returns a `SuccessResponse` directly from its terminal methods:
+
+```php
+return QueryBuilder::for(Product::class, $request)
+    ->fromResource(ProductResource::class)
+    ->paginate();
+```
+
+No need to call `$response->success()` or `->respond()`. The resource class is inherited from `fromResource()`.
 
 ## Null data
 
 ```php
-return $this->response->success()->respond();
+return $this->response->success();
 ```
 
 ```json
@@ -49,7 +63,7 @@ return $this->response->success()->respond();
 When you don't need a Resource transformation:
 
 ```php
-return $this->response->success(['message' => 'Import started'])->respond();
+return $this->response->success(['message' => 'Import started']);
 ```
 
 ```json
@@ -59,6 +73,8 @@ return $this->response->success(['message' => 'Import started'])->respond();
 ```
 
 ## Custom status code
+
+Use `->respond()` when you need a non-200 status code:
 
 ```php
 return $this->response
@@ -71,8 +87,7 @@ return $this->response
 ```php
 return $this->response
     ->success($products, ProductResource::class)
-    ->meta(['request_id' => $requestId])
-    ->respond();
+    ->meta(['request_id' => $requestId]);
 ```
 
 ```json
@@ -94,11 +109,12 @@ return $this->response
 ```php
 return $this->response
     ->success($product, ProductResource::class)
-    ->links(['self' => '/api/v1/products/abc-123'])
-    ->respond();
+    ->links(['self' => '/api/v1/products/abc-123']);
 ```
 
 ## Custom headers
+
+Use `->respond()` when you need custom headers:
 
 ```php
 return $this->response
@@ -108,7 +124,7 @@ return $this->response
 
 ## Getting the array representation
 
-Use `toArray()` instead of `respond()` to get the raw array without creating a `JsonResponse`:
+Use `toArray()` to get the raw array without creating a `JsonResponse`:
 
 ```php
 $data = $this->response

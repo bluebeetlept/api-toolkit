@@ -32,13 +32,11 @@ Use it in a controller:
 ```php
 final class ListController
 {
-    public function __invoke(Request $request, Response $response): JsonResponse
+    public function __invoke(Request $request)
     {
-        $products = QueryBuilder::for(Product::class, $request)
+        return QueryBuilder::for(Product::class, $request)
             ->fromResource(ProductResource::class)
             ->paginate();
-
-        return $response->success($products, ProductResource::class)->respond();
     }
 }
 ```

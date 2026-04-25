@@ -65,20 +65,16 @@ final class ProductResource extends Resource
 ```php app/Http/Controllers/Products/ListController.php
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use Eufaturo\ApiToolkit\Http\Response;
 use Eufaturo\ApiToolkit\QueryBuilder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class ListController
 {
-    public function __invoke(Request $request, Response $response): JsonResponse
+    public function __invoke(Request $request)
     {
-        $products = QueryBuilder::for(Product::class, $request)
+        return QueryBuilder::for(Product::class, $request)
             ->fromResource(ProductResource::class)
             ->paginate();
-
-        return $response->success($products, ProductResource::class)->respond();
     }
 }
 ```
@@ -89,13 +85,12 @@ final class ListController
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Eufaturo\ApiToolkit\Http\Response;
-use Illuminate\Http\JsonResponse;
 
 final class ViewController
 {
-    public function __invoke(Product $product, Response $response): JsonResponse
+    public function __invoke(Product $product, Response $response)
     {
-        return $response->success($product, ProductResource::class)->respond();
+        return $response->success($product, ProductResource::class);
     }
 }
 ```

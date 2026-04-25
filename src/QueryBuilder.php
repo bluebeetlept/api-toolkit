@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Eufaturo\ApiToolkit;
 
+use Eufaturo\ApiToolkit\Http\SuccessResponse;
 use Eufaturo\ApiToolkit\Pagination\CursorPaginator;
 use Eufaturo\ApiToolkit\Pagination\OffsetPaginator;
 use Eufaturo\ApiToolkit\Parsers\FilterParser;
@@ -12,10 +13,7 @@ use Eufaturo\ApiToolkit\Parsers\IncludeParser;
 use Eufaturo\ApiToolkit\Parsers\PageParser;
 use Eufaturo\ApiToolkit\Parsers\SortParser;
 use Eufaturo\ApiToolkit\Resources\Resource;
-use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginatorContract;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -101,29 +99,31 @@ final class QueryBuilder
         return $this;
     }
 
-    public function paginate(): LengthAwarePaginator
+    public function paginate(): SuccessResponse
     {
         $this->applyAll();
 
         $pageParser = app(PageParser::class);
+        $data = (new OffsetPaginator($pageParser))->paginate($this->request, $this->query);
 
-        return (new OffsetPaginator($pageParser))->paginate($this->request, $this->query);
+        return $this->toSuccessResponse($data);
     }
 
-    public function cursorPaginate(): CursorPaginatorContract
+    public function cursorPaginate(): SuccessResponse
     {
         $this->applyAll();
 
         $pageParser = app(PageParser::class);
+        $data = (new CursorPaginator($pageParser))->paginate($this->request, $this->query);
 
-        return (new CursorPaginator($pageParser))->paginate($this->request, $this->query);
+        return $this->toSuccessResponse($data);
     }
 
-    public function get(): Collection
+    public function get(): SuccessResponse
     {
         $this->applyAll();
 
-        return $this->query->get();
+        return $this->toSuccessResponse($this->query->get());
     }
 
     public function apply(): static
@@ -136,6 +136,18 @@ final class QueryBuilder
     public function getQuery(): Builder
     {
         return $this->query;
+    }
+
+    private function toSuccessResponse(mixed $data): SuccessResponse
+    {
+        $response = new SuccessResponse(
+            data: $data,
+            resource: $this->resourceClass,
+        );
+
+        $response->withRequest($this->request);
+
+        return $response;
     }
 
     private function applyAll(): void

@@ -101,8 +101,7 @@ In addition to resource-level links and meta, you can add response-level meta an
 return $response
     ->success($products, ProductResource::class)
     ->meta(['request_id' => $requestId])
-    ->links(['documentation' => 'https://docs.example.com/products'])
-    ->respond();
+    ->links(['documentation' => 'https://docs.example.com/products']);
 ```
 
 These are added to the top-level JSON:API document, separate from the individual resource objects.

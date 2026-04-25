@@ -12,7 +12,7 @@ final class Category extends Model
     protected $guarded = [];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\Eufaturo\ApiToolkit\Tests\Fixtures\Models\Product, $this>
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {
