@@ -1,0 +1,74 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "version": "1.0.0",
+    "name": "eufaturo/api-toolkit",
+    "type": "library",
+    "description": "JSON:API compliant toolkit for building REST APIs with Laravel.",
+    "keywords": [
+        "laravel",
+        "json-api",
+        "api",
+        "rest",
+        "toolkit"
+    ],
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4",
+        "eufaturo/idempotency-middleware": "^1.0",
+        "illuminate/contracts": "^13.0",
+        "illuminate/database": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/routing": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "eufaturo/coding-standards": "dev-main",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eufaturo\\ApiToolkit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Eufaturo\\ApiToolkit\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit -c phpunit.dist.xml",
+        "test:coverage": [
+            "@putenv XDEBUG_MODE=coverage",
+            "./vendor/bin/phpunit -c phpunit-coverage.dist.xml"
+        ],
+        "ecs:fix": "./vendor/bin/ecs --fix",
+        "ecs:check": "./vendor/bin/ecs",
+        "phpstan:check": "./vendor/bin/phpstan analyse --ansi",
+        "phpstan:generate-baseline": "./vendor/bin/phpstan --generate-baseline",
+        "rector:fix": "./vendor/bin/rector process --ansi",
+        "rector:check": "./vendor/bin/rector process --ansi --dry-run"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "eufaturo/coding-standards": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Eufaturo\\ApiToolkit\\ApiToolkitServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

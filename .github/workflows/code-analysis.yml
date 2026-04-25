@@ -1,0 +1,59 @@
+name: Code Analysis
+
+on:
+  # push:
+  pull_request:
+  # schedule:
+  #   - cron: '0 9 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code_analysis_composer:
+    if: "!contains(github.event.head_commit.message, '[skip-ci]')"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.4"]
+
+        actions:
+          - name: ECS
+            run: "composer ecs:check"
+
+          - name: PHPStan
+            run: "composer phpstan:check"
+
+          - name: Rector
+            run: "composer rector:check"
+
+    name: ${{ matrix.actions.name }} on PHP ${{ matrix.php }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-dependencies-php-${{ matrix.php }}-${{ hashFiles('composer.json') }}
+
+      - name: Set up PHP
+        env:
+          PHP_VERSION: ${{ matrix.php }}
+        run: bash ${PWD}/.github/scripts/setup-php.sh
+
+      - name: Install Composer
+        run: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+      - name: Install Composer dependencies
+        env:
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{secrets.COMPOSER_AUTH}}"} }'
+        uses: ramsey/composer-install@v2
+
+      - run: ${{ matrix.actions.run }}

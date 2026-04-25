@@ -1,0 +1,16 @@
+includes:
+    - ./vendor/eufaturo/coding-standards/extension-for-laravel.neon
+
+parameters:
+    paths:
+        - src/
+        - tests/
+
+    # The level 8 is the highest level
+    level: 0
+
+    parallel:
+        processTimeout: 300.0
+
+    ignoreErrors:
+        - '#Dynamic call to static method PHPUnit\\Framework\\.*#'

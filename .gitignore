@@ -1,0 +1,12 @@
+/@CodeCoverage/
+/vendor/
+/.phpunit.cache
+composer.lock
+/.idea/
+/.vscode/
+.DS_Store
+
+# Docker dev symlinks
+/bin
+.envrc
+auth.json

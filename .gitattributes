@@ -1,0 +1,18 @@
+* text=auto
+
+*.php diff=php
+
+/.github                   export-ignore
+/tests                     export-ignore
+/.conform.yaml             export-ignore
+/.editorconfig             export-ignore
+/.gitattributes            export-ignore
+/.gitignore                export-ignore
+/ecs.php                   export-ignore
+/phpstan.neon              export-ignore
+/phpunit.ci.dist.xml       export-ignore
+/phpunit.dist.xml          export-ignore
+/phpunit-coverage.dist.xml export-ignore
+/README.md                 export-ignore
+/rector.php                export-ignore
+/renovate.json             export-ignore
