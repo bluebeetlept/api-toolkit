@@ -26,6 +26,15 @@ class TestResponse extends \Illuminate\Testing\TestResponse
     }
 
     /**
+     * Get the attributes of a single JSON:API resource as a TestDataResponse.
+     * Shortcut for data.attributes.
+     */
+    public function attributes(): TestDataResponse
+    {
+        return new TestDataResponse($this->json('data.attributes') ?? []);
+    }
+
+    /**
      * Get the JSON:API included array as a TestDataResponse.
      */
     public function included(): TestDataResponse
@@ -77,6 +86,29 @@ class TestResponse extends \Illuminate\Testing\TestResponse
     public function assertErrorCode(string $code): self
     {
         $this->assertJsonPath('errors.0.code', $code);
+
+        return $this;
+    }
+
+    /**
+     * Assert a validation error exists for the given field with the given message.
+     */
+    public function assertValidationError(string $field, string $message): self
+    {
+        $errors = $this->json('errors') ?? [];
+        $pointer = '/'.str_replace('.', '/', $field);
+
+        $found = false;
+
+        foreach ($errors as $error) {
+            if (($error['source']['pointer'] ?? '') === $pointer && ($error['detail'] ?? '') === $message) {
+                $found = true;
+
+                break;
+            }
+        }
+
+        Assert::assertTrue($found, "No validation error found for field [{$field}] with message [{$message}].");
 
         return $this;
     }
