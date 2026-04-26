@@ -1,0 +1,112 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "API Toolkit",
+  "theme": "mint",
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373"
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@bluebeetle.pt"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "GitHub",
+    "url": "https://github.com/bluebeetlept/api-toolkit"
+  },
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/bluebeetlept/api-toolkit"
+    }
+  ],
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Resources",
+        "pages": [
+          "resources/overview",
+          "resources/defining-resources",
+          "resources/links-and-meta",
+          "resources/relationships",
+          "resources/collections",
+          "resources/dependency-injection"
+        ]
+      },
+      {
+        "group": "Responses",
+        "pages": [
+          "responses/overview",
+          "responses/success-responses",
+          "responses/error-responses"
+        ]
+      },
+      {
+        "group": "Query Builder",
+        "pages": [
+          "query-builder/overview",
+          "query-builder/resource-defaults",
+          "query-builder/overrides",
+          "query-builder/pagination"
+        ]
+      },
+      {
+        "group": "Parsers",
+        "pages": [
+          "parsers/overview",
+          "parsers/filters",
+          "parsers/sorting",
+          "parsers/includes",
+          "parsers/sparse-fieldsets",
+          "parsers/page"
+        ]
+      },
+      {
+        "group": "OpenAPI",
+        "pages": [
+          "openapi/overview",
+          "openapi/generating"
+        ]
+      },
+      {
+        "group": "Exceptions",
+        "pages": [
+          "exceptions/overview",
+          "exceptions/configuration"
+        ]
+      },
+      {
+        "group": "HTTP",
+        "pages": [
+          "http/middleware",
+          "http/idempotency",
+          "http/form-requests",
+          "http/validation-rules"
+        ]
+      },
+      {
+        "group": "Testing",
+        "pages": [
+          "testing/overview",
+          "testing/assertions"
+        ]
+      }
+    ]
+  },
+  "footerSocials": {
+    "github": "https://github.com/bluebeetlept/api-toolkit"
+  }
+}
