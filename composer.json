@@ -21,7 +21,7 @@
         "illuminate/support": "^13.0"
     },
     "require-dev": {
-        "bluebeetlept/coding-standards": "dev-main",
+        "eufaturo/coding-standards": "dev-main",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^11.0",
         "phpunit/phpunit": "^13.0"
@@ -55,7 +55,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "php-http/discovery": true,
-            "bluebeetlept/coding-standards": true
+            "eufaturo/coding-standards": true
         }
     },
     "extra": {
