@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Tests\Acceptance\JsonApi;
 
-use Carbon\Carbon;
 use BlueBeetle\ApiToolkit\Http\Response;
 use BlueBeetle\ApiToolkit\Resources\Resource;
 use BlueBeetle\ApiToolkit\Tests\TestCase;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

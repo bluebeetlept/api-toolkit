@@ -4,8 +4,8 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Tests\Fixtures\Resources;
 
-use Carbon\CarbonInterface;
 use BlueBeetle\ApiToolkit\Resources\Resource;
+use Carbon\CarbonInterface;
 
 final class TimestampResource extends Resource
 {
