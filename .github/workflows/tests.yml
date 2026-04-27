@@ -47,7 +47,7 @@ jobs:
 
       - name: Install Composer dependencies
         env:
-          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{secrets.COMPOSER_AUTH}}"} }'
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{secrets.EUFATURO_BOT_PAT}}"} }'
         uses: ramsey/composer-install@4.0.0
 
       - run: ${{ matrix.actions.run }}
