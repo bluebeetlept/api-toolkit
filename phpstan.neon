@@ -1,5 +1,5 @@
 includes:
-    - ./vendor/eufaturo/coding-standards/extension-for-laravel.neon
+    - ./vendor/bluebeetlept/coding-standards/extension-for-laravel.neon
 
 parameters:
     paths:

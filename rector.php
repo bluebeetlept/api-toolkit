@@ -3,12 +3,12 @@
 declare(strict_types = 1);
 
 use Rector\Config\RectorConfig;
-use Eufaturo\CodingStandards\Config\EufaturoRectorConfig;
+use BlueBeetle\CodingStandards\Config\BlueBeetleRectorConfig;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->disableParallel();
 
-    EufaturoRectorConfig::setup($rectorConfig);
+    BlueBeetleRectorConfig::setup($rectorConfig);
 
     $rectorConfig->paths([
         __DIR__ . '/src',

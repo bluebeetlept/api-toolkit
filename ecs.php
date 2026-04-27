@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 use Symplify\EasyCodingStandard\Config\ECSConfig;
-use Eufaturo\CodingStandards\Config\EufaturoEcsConfig;
+use BlueBeetle\CodingStandards\Config\BlueBeetleEcsConfig;
 
 return static function (ECSConfig $ecsConfig): void {
     $ecsConfig->paths([
@@ -11,5 +11,5 @@ return static function (ECSConfig $ecsConfig): void {
         __DIR__ . '/tests',
     ]);
 
-    EufaturoEcsConfig::setup($ecsConfig);
+    BlueBeetleEcsConfig::setup($ecsConfig);
 };
