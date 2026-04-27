@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace BlueBeetle\ApiToolkit\Resources;
 
 use BadMethodCallException;
-use Closure;
 use BlueBeetle\ApiToolkit\Parsers\Filters\Filter;
+use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
