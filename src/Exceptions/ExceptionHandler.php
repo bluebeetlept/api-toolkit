@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Exceptions;
 
-use Eufaturo\IdempotencyMiddleware\IdempotencyException;
+use BlueBeetle\IdempotencyMiddleware\IdempotencyException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

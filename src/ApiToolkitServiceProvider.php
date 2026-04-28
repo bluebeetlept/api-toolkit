@@ -8,7 +8,7 @@ use BlueBeetle\ApiToolkit\Console\GenerateOpenApiCommand;
 use BlueBeetle\ApiToolkit\Console\MakeResourceCommand;
 use BlueBeetle\ApiToolkit\Http\Response;
 use BlueBeetle\ApiToolkit\Parsers\PageParser;
-use Eufaturo\IdempotencyMiddleware\IdempotencyServiceProvider;
+use BlueBeetle\IdempotencyMiddleware\IdempotencyServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 

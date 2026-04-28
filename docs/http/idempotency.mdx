@@ -3,7 +3,7 @@ title: Idempotency
 description: Built-in idempotency support for API requests
 ---
 
-API Toolkit includes the [`eufaturo/idempotency-middleware`](https://github.com/eufaturo/idempotency-middleware) package, which provides idempotency support for your API endpoints.
+API Toolkit includes the [`bluebeetlept/idempotency-middleware`](https://github.com/bluebeetlept/idempotency-middleware) package, which provides idempotency support for your API endpoints.
 
 ## How it works
 
@@ -14,7 +14,7 @@ Clients send an `Idempotency-Key` header (a UUID v4) with their request. If the 
 Apply the middleware to routes that should support idempotency:
 
 ```php
-use Eufaturo\IdempotencyMiddleware\Idempotency;
+use BlueBeetle\IdempotencyMiddleware\Idempotency;
 
 Route::middleware(Idempotency::class)->group(function () {
     Route::post('/products', CreateController::class);
@@ -39,7 +39,7 @@ If the same `Idempotency-Key` is sent again with the same body and endpoint, the
 Publish the config file:
 
 ```bash
-php artisan vendor:publish --tag="eufaturo-idempotency-config"
+php artisan vendor:publish --tag="bluebeetle-idempotency-config"
 ```
 
 Or configure via environment variables:
