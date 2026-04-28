@@ -59,9 +59,6 @@
         }
     },
     "extra": {
-        "branch-alias": {
-            "dev-main": "1.0.x-dev"
-        },
         "laravel": {
             "providers": [
                 "BlueBeetle\\ApiToolkit\\ApiToolkitServiceProvider"
