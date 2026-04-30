@@ -1,11 +1,17 @@
 # API Toolkit
 
+<p>
+    <a href="https://github.com/bluebeetlept/api-toolkit/actions?query=workflow%3Atests"><img src="https://github.com/bluebeetlept/api-toolkit/actions/workflows/tests.yml/badge.svg?branch=main" alt="Tests"></a>
+    <a href="https://github.com/bluebeetlept/api-toolkit/actions?query=workflow%3Acode-analysis"><img src="https://github.com/bluebeetlept/api-toolkit/actions/workflows/code-analysis.yml/badge.svg?branch=main" alt="Code Analysis"></a>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/github/license/bluebeetlept/api-toolkit?label=License" alt="License"></a>
+</p>
+
 JSON:API compliant toolkit for building REST APIs with Laravel.
 
 ## Installation
 
-```shell
-composer require bluebeetlept/api-toolkit:^1.0@dev
+```bash
+composer require bluebeetle/api-toolkit
 ```
 
 ## Quick Start
@@ -47,6 +53,15 @@ Full documentation is available in the `docs/` directory, powered by [Mintlify](
 
 ## Testing
 
-```shell
+```bash
 composer test
 ```
+
+## Credits
+
+- [Blue Beetle](https://bluebeetle.pt)
+- [All Contributors](../../contributors)
+
+## License
+
+Licensed under the [MIT license](https://opensource.org/licenses/MIT).

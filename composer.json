@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "bluebeetlept/api-toolkit",
+    "name": "bluebeetle/api-toolkit",
     "type": "library",
     "description": "JSON:API compliant toolkit for building REST APIs with Laravel.",
     "keywords": [
@@ -13,7 +13,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.4",
-        "bluebeetlept/idempotency-middleware": "^2.0",
+        "bluebeetle/idempotency-middleware": "^2.0",
         "illuminate/contracts": "^13.0",
         "illuminate/database": "^13.0",
         "illuminate/http": "^13.0",
