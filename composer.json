@@ -13,7 +13,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.4",
-        "bluebeetle/idempotency-middleware": "^2.0",
+        "bluebeetle/idempotency-middleware": "^1.0",
         "illuminate/contracts": "^13.0",
         "illuminate/database": "^13.0",
         "illuminate/http": "^13.0",
