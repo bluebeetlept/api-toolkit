@@ -113,4 +113,48 @@ final class PageParserTest extends TestCase
         $this->assertFalse($parser->isCursor($request));
         $this->assertNull($parser->getCursor($request));
     }
+
+    #[Test]
+    #[TestDox('it handles non-array page param for isCursor')]
+    public function it_handles_non_array_page_for_is_cursor(): void
+    {
+        $parser = new PageParser();
+
+        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+
+        $this->assertFalse($parser->isCursor($request));
+    }
+
+    #[Test]
+    #[TestDox('it handles non-array page param for getSize')]
+    public function it_handles_non_array_page_for_size(): void
+    {
+        $parser = new PageParser(defaultSize: 25);
+
+        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+
+        $this->assertSame(25, $parser->getSize($request));
+    }
+
+    #[Test]
+    #[TestDox('it handles non-array page param for getNumber')]
+    public function it_handles_non_array_page_for_number(): void
+    {
+        $parser = new PageParser();
+
+        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+
+        $this->assertSame(1, $parser->getNumber($request));
+    }
+
+    #[Test]
+    #[TestDox('it handles non-array page param for getCursor')]
+    public function it_handles_non_array_page_for_cursor(): void
+    {
+        $parser = new PageParser();
+
+        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+
+        $this->assertNull($parser->getCursor($request));
+    }
 }

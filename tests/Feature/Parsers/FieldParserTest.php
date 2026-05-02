@@ -93,4 +93,36 @@ final class FieldParserTest extends TestCase
 
         $this->assertSame($attributes, $result);
     }
+
+    #[Test]
+    #[TestDox('it returns empty when fields param is not an array')]
+    public function it_returns_empty_for_non_array_fields(): void
+    {
+        $parser = new FieldParser();
+
+        $request = Request::create('/', 'GET', ['fields' => 'not-an-array']);
+
+        $this->assertSame([], $parser->parse($request));
+    }
+
+    #[Test]
+    #[TestDox('it skips non-string or empty field values')]
+    public function it_skips_invalid_field_values(): void
+    {
+        $parser = new FieldParser();
+
+        $request = Request::create('/', 'GET', [
+            'fields' => [
+                'products' => 'name,code',
+                'categories' => '',
+                'tags' => ['not', 'a', 'string'],
+            ],
+        ]);
+
+        $result = $parser->parse($request);
+
+        $this->assertSame(['name', 'code'], $result['products']);
+        $this->assertArrayNotHasKey('categories', $result);
+        $this->assertArrayNotHasKey('tags', $result);
+    }
 }

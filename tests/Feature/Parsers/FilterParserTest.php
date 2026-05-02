@@ -148,4 +148,20 @@ final class FilterParserTest extends TestCase
         $this->assertStringContainsString('status', $sql);
         $this->assertContains('active', $bindings);
     }
+
+    #[Test]
+    #[TestDox('it handles non-array filter parameter')]
+    public function it_handles_non_array_filter(): void
+    {
+        $parser = new FilterParser([
+            'status' => new ExactFilter(),
+        ]);
+
+        $request = Request::create('/', 'GET', ['filter' => 'not-an-array']);
+        $query = Product::query();
+
+        $result = $parser->apply($request, $query);
+
+        $this->assertEmpty($query->getBindings());
+    }
 }

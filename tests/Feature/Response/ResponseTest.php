@@ -5,8 +5,9 @@ declare(strict_types = 1);
 namespace BlueBeetle\ApiToolkit\Tests\Feature\Response;
 
 use BlueBeetle\ApiToolkit\Http\Response;
-use BlueBeetle\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\StubItemResource;
 use BlueBeetle\ApiToolkit\Tests\TestCase;
+use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 use stdClass;
@@ -150,14 +151,127 @@ final class ResponseTest extends TestCase
 
         $this->assertSame(['raw' => 'data'], $data['data']);
     }
-}
 
-class StubItemResource extends Resource
-{
-    protected string $type = 'items';
-
-    public function attributes($model): array
+    #[Test]
+    #[TestDox('it creates a success response with links')]
+    public function it_creates_success_with_links(): void
     {
-        return ['name' => $model->name];
+        $response = new Response();
+
+        $model = new stdClass();
+        $model->id = '1';
+        $model->name = 'Widget';
+
+        $result = $response
+            ->success($model, StubItemResource::class)
+            ->links(['self' => '/api/v1/items/1'])
+            ->respond()
+        ;
+
+        $data = json_decode($result->getContent(), true);
+
+        $this->assertSame('/api/v1/items/1', $data['links']['self']);
+    }
+
+    #[Test]
+    #[TestDox('it creates a success response with custom headers')]
+    public function it_creates_success_with_custom_headers(): void
+    {
+        $response = new Response();
+
+        $result = $response->success()->respond(200, ['X-Request-Id' => 'req-123']);
+
+        $this->assertSame('req-123', $result->headers->get('X-Request-Id'));
+        $this->assertSame('application/vnd.api+json', $result->headers->get('Content-Type'));
+    }
+
+    #[Test]
+    #[TestDox('it creates an error response with meta')]
+    public function it_creates_error_with_meta(): void
+    {
+        $response = new Response();
+
+        $result = $response
+            ->error('Bad Request', 'Something went wrong', 400)
+            ->meta(['request_id' => 'req-abc'])
+            ->respond()
+        ;
+
+        $data = json_decode($result->getContent(), true);
+
+        $this->assertSame('req-abc', $data['errors'][0]['meta']['request_id']);
+    }
+
+    #[Test]
+    #[TestDox('it creates an error response with custom headers')]
+    public function it_creates_error_with_custom_headers(): void
+    {
+        $response = new Response();
+
+        $result = $response
+            ->error('Too Many Requests', 'Rate limit exceeded', 429)
+            ->respond(null, ['Retry-After' => '60'])
+        ;
+
+        $this->assertSame(429, $result->getStatusCode());
+        $this->assertSame('60', $result->headers->get('Retry-After'));
+    }
+
+    #[Test]
+    #[TestDox('it creates an error response with status override')]
+    public function it_creates_error_with_status_override(): void
+    {
+        $response = new Response();
+
+        $result = $response
+            ->error('Error', 'detail', 400)
+            ->respond(503)
+        ;
+
+        $this->assertSame(503, $result->getStatusCode());
+
+        $data = json_decode($result->getContent(), true);
+        // toArray still uses the original status
+        $this->assertSame('400', $data['errors'][0]['status']);
+    }
+
+    #[Test]
+    #[TestDox('it implements Responsable for success response')]
+    public function it_implements_responsable_for_success(): void
+    {
+        $response = new Response();
+
+        $successResponse = $response->success(['test' => true]);
+        $result = $successResponse->toResponse(Request::create('/'));
+
+        $this->assertSame(200, $result->getStatusCode());
+    }
+
+    #[Test]
+    #[TestDox('it implements Responsable for error response')]
+    public function it_implements_responsable_for_error(): void
+    {
+        $response = new Response();
+
+        $errorResponse = $response->error('Bad Request', 'detail', 400);
+        $result = $errorResponse->toResponse(Request::create('/'));
+
+        $this->assertSame(400, $result->getStatusCode());
+    }
+
+    #[Test]
+    #[TestDox('error response omits optional fields when not set')]
+    public function it_omits_optional_error_fields(): void
+    {
+        $response = new Response();
+
+        $result = $response->error('Bad Request')->respond();
+        $data = json_decode($result->getContent(), true);
+        $error = $data['errors'][0];
+
+        $this->assertArrayNotHasKey('code', $error);
+        $this->assertArrayNotHasKey('detail', $error);
+        $this->assertArrayNotHasKey('source', $error);
+        $this->assertArrayNotHasKey('meta', $error);
     }
 }

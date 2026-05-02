@@ -112,4 +112,21 @@ final class SortParserTest extends TestCase
         $orders = $query->getQuery()->orders ?? [];
         $this->assertEmpty($orders);
     }
+
+    #[Test]
+    #[TestDox('it skips empty sort fields from trailing commas')]
+    public function it_skips_empty_sort_fields(): void
+    {
+        $parser = new SortParser(allowed: ['name', 'code']);
+
+        $request = Request::create('/', 'GET', ['sort' => 'name,,code']);
+        $query = Product::query();
+
+        $parser->apply($request, $query);
+
+        $orders = $query->getQuery()->orders ?? [];
+        $this->assertCount(2, $orders);
+        $this->assertSame('name', $orders[0]['column']);
+        $this->assertSame('code', $orders[1]['column']);
+    }
 }
