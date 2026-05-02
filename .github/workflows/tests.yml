@@ -19,8 +19,8 @@ jobs:
         php: ["8.4"]
 
         actions:
-          - name: Execute PHPUnit
-            run: ./vendor/bin/phpunit -c phpunit.ci.dist.xml
+          - name: Execute Pest
+            run: ./vendor/bin/pest -c phpunit.ci.dist.xml
 
     name: PHP ${{ matrix.php }}
 

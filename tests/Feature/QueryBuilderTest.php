@@ -11,308 +11,253 @@ use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\StubModel;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\StubQueryResource;
-use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Http\Request;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\TestDox;
 
-final class QueryBuilderTest extends TestCase
-{
-    #[Test]
-    #[TestDox('it creates a query builder from a model class')]
-    public function it_creates_from_model(): void
-    {
-        $request = Request::create('/');
+it('creates a query builder from a model class', function () {
+    $request = Request::create('/');
 
-        $builder = QueryBuilder::for(StubModel::class, $request);
+    $builder = QueryBuilder::for(StubModel::class, $request);
 
-        $this->assertInstanceOf(QueryBuilder::class, $builder);
-    }
+    expect($builder)->toBeInstanceOf(QueryBuilder::class);
+});
 
-    #[Test]
-    #[TestDox('it creates a query builder from an existing builder')]
-    public function it_creates_from_builder(): void
-    {
-        $request = Request::create('/');
-        $eloquentBuilder = StubModel::query();
+it('creates a query builder from an existing builder', function () {
+    $request = Request::create('/');
+    $eloquentBuilder = StubModel::query();
 
-        $builder = QueryBuilder::for($eloquentBuilder, $request);
+    $builder = QueryBuilder::for($eloquentBuilder, $request);
 
-        $this->assertInstanceOf(QueryBuilder::class, $builder);
-    }
+    expect($builder)->toBeInstanceOf(QueryBuilder::class);
+});
 
-    #[Test]
-    #[TestDox('it applies filters from resource')]
-    public function it_applies_filters_from_resource(): void
-    {
-        $request = Request::create('/', 'GET', ['filter' => ['name' => 'Widget']]);
+it('applies filters from resource', function () {
+    $request = Request::create('/', 'GET', ['filter' => ['name' => 'Widget']]);
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->fromResource(StubQueryResource::class)
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->fromResource(StubQueryResource::class)
+    ;
 
-        $query = $builder->apply()->getQuery();
-        $sql = $query->toSql();
+    $query = $builder->apply()->getQuery();
+    $sql = $query->toSql();
 
-        // The PartialFilter adds a LIKE clause
-        $this->assertStringContainsString('like', mb_strtolower($sql));
-    }
+    expect(mb_strtolower($sql))->toContain('like');
+});
 
-    #[Test]
-    #[TestDox('it overrides resource filters with explicit filters')]
-    public function it_overrides_filters(): void
-    {
-        $request = Request::create('/', 'GET', ['filter' => ['name' => 'Widget']]);
+it('overrides resource filters with explicit filters', function () {
+    $request = Request::create('/', 'GET', ['filter' => ['name' => 'Widget']]);
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->fromResource(StubQueryResource::class)
-            ->allowedFilters(['name' => new ExactFilter()])
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->fromResource(StubQueryResource::class)
+        ->allowedFilters(['name' => new ExactFilter()])
+    ;
 
-        $query = $builder->apply()->getQuery();
-        $sql = $query->toSql();
+    $query = $builder->apply()->getQuery();
+    $sql = $query->toSql();
 
-        // ExactFilter uses = instead of LIKE
-        $this->assertStringNotContainsString('like', mb_strtolower($sql));
-    }
+    expect(mb_strtolower($sql))->not->toContain('like');
+});
 
-    #[Test]
-    #[TestDox('it applies sorts from resource')]
-    public function it_applies_sorts_from_resource(): void
-    {
-        $request = Request::create('/');
+it('applies sorts from resource', function () {
+    $request = Request::create('/');
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->fromResource(StubQueryResource::class)
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->fromResource(StubQueryResource::class)
+    ;
 
-        $query = $builder->apply()->getQuery();
+    $query = $builder->apply()->getQuery();
 
-        // Default sort should be applied
-        $orders = $query->getQuery()->orders ?? [];
-        $this->assertNotEmpty($orders);
-        $this->assertSame('created_at', $orders[0]['column']);
-        $this->assertSame('desc', $orders[0]['direction']);
-    }
+    $orders = $query->getQuery()->orders ?? [];
+    expect($orders)->not->toBeEmpty();
+    expect($orders[0]['column'])->toBe('created_at');
+    expect($orders[0]['direction'])->toBe('desc');
+});
 
-    #[Test]
-    #[TestDox('it overrides default sort')]
-    public function it_overrides_default_sort(): void
-    {
-        $request = Request::create('/');
+it('overrides default sort', function () {
+    $request = Request::create('/');
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->fromResource(StubQueryResource::class)
-            ->defaultSort('name')
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->fromResource(StubQueryResource::class)
+        ->defaultSort('name')
+    ;
 
-        $query = $builder->apply()->getQuery();
+    $query = $builder->apply()->getQuery();
 
-        $orders = $query->getQuery()->orders ?? [];
-        $this->assertNotEmpty($orders);
-        $this->assertSame('name', $orders[0]['column']);
-        $this->assertSame('asc', $orders[0]['direction']);
-    }
+    $orders = $query->getQuery()->orders ?? [];
+    expect($orders)->not->toBeEmpty();
+    expect($orders[0]['column'])->toBe('name');
+    expect($orders[0]['direction'])->toBe('asc');
+});
 
-    #[Test]
-    #[TestDox('it applies includes from request')]
-    public function it_applies_includes(): void
-    {
-        $request = Request::create('/', 'GET', ['include' => 'category']);
+it('applies includes from request', function () {
+    $request = Request::create('/', 'GET', ['include' => 'category']);
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->fromResource(StubQueryResource::class)
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->fromResource(StubQueryResource::class)
+    ;
 
-        $query = $builder->apply()->getQuery();
+    $query = $builder->apply()->getQuery();
 
-        $eagerLoads = $query->getEagerLoads();
-        $this->assertArrayHasKey('category', $eagerLoads);
-    }
+    $eagerLoads = $query->getEagerLoads();
+    expect($eagerLoads)->toHaveKey('category');
+});
 
-    #[Test]
-    #[TestDox('it works without a resource')]
-    public function it_works_without_resource(): void
-    {
-        $request = Request::create('/', 'GET', ['filter' => ['status' => 'active']]);
+it('works without a resource', function () {
+    $request = Request::create('/', 'GET', ['filter' => ['status' => 'active']]);
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->allowedFilters(['status' => new ExactFilter()])
-            ->allowedSorts(['name', 'created_at'])
-            ->defaultSort('-created_at')
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->allowedFilters(['status' => new ExactFilter()])
+        ->allowedSorts(['name', 'created_at'])
+        ->defaultSort('-created_at')
+    ;
 
-        $query = $builder->apply()->getQuery();
-        $sql = $query->toSql();
+    $query = $builder->apply()->getQuery();
+    $sql = $query->toSql();
 
-        $this->assertStringContainsString('status', $sql);
-    }
+    expect($sql)->toContain('status');
+});
 
-    #[Test]
-    #[TestDox('it ignores disallowed includes')]
-    public function it_ignores_disallowed_includes(): void
-    {
-        $request = Request::create('/', 'GET', ['include' => 'category,secret']);
+it('ignores disallowed includes', function () {
+    $request = Request::create('/', 'GET', ['include' => 'category,secret']);
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->allowedIncludes(['category'])
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->allowedIncludes(['category'])
+    ;
 
-        $query = $builder->apply()->getQuery();
+    $query = $builder->apply()->getQuery();
 
-        $eagerLoads = $query->getEagerLoads();
-        $this->assertArrayHasKey('category', $eagerLoads);
-        $this->assertArrayNotHasKey('secret', $eagerLoads);
-    }
+    $eagerLoads = $query->getEagerLoads();
+    expect($eagerLoads)->toHaveKey('category');
+    expect($eagerLoads)->not->toHaveKey('secret');
+});
 
-    #[Test]
-    #[TestDox('it does nothing with no configuration')]
-    public function it_does_nothing_bare(): void
-    {
-        $request = Request::create('/', 'GET', [
-            'filter' => ['status' => 'active'],
-            'sort' => 'name',
-            'include' => 'category',
-        ]);
+it('does nothing with no configuration', function () {
+    $request = Request::create('/', 'GET', [
+        'filter' => ['status' => 'active'],
+        'sort' => 'name',
+        'include' => 'category',
+    ]);
 
-        $builder = QueryBuilder::for(StubModel::class, $request);
-        $query = $builder->getQuery();
+    $builder = QueryBuilder::for(StubModel::class, $request);
+    $query = $builder->getQuery();
 
-        // No filters, sorts, or includes applied (getQuery returns raw builder)
-        $this->assertStringNotContainsString('status', $query->toSql());
-        $this->assertEmpty($query->getQuery()->orders ?? []);
-        $this->assertEmpty($query->getEagerLoads());
-    }
+    expect($query->toSql())->not->toContain('status');
+    expect($query->getQuery()->orders ?? [])->toBeEmpty();
+    expect($query->getEagerLoads())->toBeEmpty();
+});
 
-    #[Test]
-    #[TestDox('it returns a SuccessResponse from paginate')]
-    public function it_paginates(): void
-    {
-        Product::create([
-            'public_id' => 'prod-1',
-            'name' => 'Widget',
-            'code' => 'W01',
-            'price_in_cents' => 1000,
-            'featured' => false,
-        ]);
+it('returns a SuccessResponse from paginate', function () {
+    Product::create([
+        'public_id' => 'prod-1',
+        'name' => 'Widget',
+        'code' => 'W01',
+        'price_in_cents' => 1000,
+        'featured' => false,
+    ]);
 
-        $request = Request::create('/', 'GET', ['page' => ['size' => 10]]);
+    $request = Request::create('/', 'GET', ['page' => ['size' => 10]]);
 
-        $result = QueryBuilder::for(Product::class, $request)
-            ->fromResource(ProductResource::class)
-            ->paginate()
-        ;
+    $result = QueryBuilder::for(Product::class, $request)
+        ->fromResource(ProductResource::class)
+        ->paginate()
+    ;
 
-        $this->assertInstanceOf(SuccessResponse::class, $result);
+    expect($result)->toBeInstanceOf(SuccessResponse::class);
 
-        $array = $result->toArray();
-        $this->assertArrayHasKey('data', $array);
-        $this->assertArrayHasKey('meta', $array);
-        $this->assertArrayHasKey('links', $array);
-    }
+    $array = $result->toArray();
+    expect($array)->toHaveKey('data');
+    expect($array)->toHaveKey('meta');
+    expect($array)->toHaveKey('links');
+});
 
-    #[Test]
-    #[TestDox('it returns a SuccessResponse from cursorPaginate')]
-    public function it_cursor_paginates(): void
-    {
-        Product::create([
-            'public_id' => 'prod-1',
-            'name' => 'Widget',
-            'code' => 'W01',
-            'price_in_cents' => 1000,
-            'featured' => false,
-        ]);
+it('returns a SuccessResponse from cursorPaginate', function () {
+    Product::create([
+        'public_id' => 'prod-1',
+        'name' => 'Widget',
+        'code' => 'W01',
+        'price_in_cents' => 1000,
+        'featured' => false,
+    ]);
 
-        $request = Request::create('/', 'GET', ['page' => ['size' => 10]]);
+    $request = Request::create('/', 'GET', ['page' => ['size' => 10]]);
 
-        $result = QueryBuilder::for(Product::class, $request)
-            ->fromResource(ProductResource::class)
-            ->cursorPaginate()
-        ;
+    $result = QueryBuilder::for(Product::class, $request)
+        ->fromResource(ProductResource::class)
+        ->cursorPaginate()
+    ;
 
-        $this->assertInstanceOf(SuccessResponse::class, $result);
+    expect($result)->toBeInstanceOf(SuccessResponse::class);
 
-        $array = $result->toArray();
-        $this->assertArrayHasKey('data', $array);
-        $this->assertArrayHasKey('meta', $array);
-    }
+    $array = $result->toArray();
+    expect($array)->toHaveKey('data');
+    expect($array)->toHaveKey('meta');
+});
 
-    #[Test]
-    #[TestDox('it returns a SuccessResponse from get')]
-    public function it_gets(): void
-    {
-        Product::create([
-            'public_id' => 'prod-1',
-            'name' => 'Widget',
-            'code' => 'W01',
-            'price_in_cents' => 1000,
-            'featured' => false,
-        ]);
+it('returns a SuccessResponse from get', function () {
+    Product::create([
+        'public_id' => 'prod-1',
+        'name' => 'Widget',
+        'code' => 'W01',
+        'price_in_cents' => 1000,
+        'featured' => false,
+    ]);
 
-        $request = Request::create('/');
+    $request = Request::create('/');
 
-        $result = QueryBuilder::for(Product::class, $request)
-            ->fromResource(ProductResource::class)
-            ->get()
-        ;
+    $result = QueryBuilder::for(Product::class, $request)
+        ->fromResource(ProductResource::class)
+        ->get()
+    ;
 
-        $this->assertInstanceOf(SuccessResponse::class, $result);
+    expect($result)->toBeInstanceOf(SuccessResponse::class);
 
-        $array = $result->toArray();
-        $this->assertArrayHasKey('data', $array);
-    }
+    $array = $result->toArray();
+    expect($array)->toHaveKey('data');
+});
 
-    #[Test]
-    #[TestDox('apply returns the builder for further chaining')]
-    public function it_applies_and_returns_builder(): void
-    {
-        $request = Request::create('/', 'GET', ['filter' => ['status' => 'active']]);
+it('returns the builder for further chaining from apply', function () {
+    $request = Request::create('/', 'GET', ['filter' => ['status' => 'active']]);
 
-        $builder = QueryBuilder::for(StubModel::class, $request)
-            ->allowedFilters(['status' => new ExactFilter()])
-            ->apply()
-        ;
+    $builder = QueryBuilder::for(StubModel::class, $request)
+        ->allowedFilters(['status' => new ExactFilter()])
+        ->apply()
+    ;
 
-        $this->assertInstanceOf(QueryBuilder::class, $builder);
+    expect($builder)->toBeInstanceOf(QueryBuilder::class);
 
-        $query = $builder->getQuery();
-        $this->assertStringContainsString('status', $query->toSql());
-    }
+    $query = $builder->getQuery();
+    expect($query->toSql())->toContain('status');
+});
 
-    #[Test]
-    #[TestDox('paginate applies filters and sorts before paginating')]
-    public function it_applies_filters_before_paginating(): void
-    {
-        Product::create([
-            'public_id' => 'prod-1',
-            'name' => 'Widget',
-            'code' => 'W01',
-            'price_in_cents' => 1000,
-            'featured' => false,
-            'status' => 'active',
-        ]);
+it('applies filters and sorts before paginating', function () {
+    Product::create([
+        'public_id' => 'prod-1',
+        'name' => 'Widget',
+        'code' => 'W01',
+        'price_in_cents' => 1000,
+        'featured' => false,
+        'status' => 'active',
+    ]);
 
-        Product::create([
-            'public_id' => 'prod-2',
-            'name' => 'Gadget',
-            'code' => 'G01',
-            'price_in_cents' => 2000,
-            'featured' => false,
-            'status' => 'archived',
-        ]);
+    Product::create([
+        'public_id' => 'prod-2',
+        'name' => 'Gadget',
+        'code' => 'G01',
+        'price_in_cents' => 2000,
+        'featured' => false,
+        'status' => 'archived',
+    ]);
 
-        $request = Request::create('/', 'GET', [
-            'filter' => ['status' => 'active'],
-            'page' => ['size' => 10],
-        ]);
+    $request = Request::create('/', 'GET', [
+        'filter' => ['status' => 'active'],
+        'page' => ['size' => 10],
+    ]);
 
-        $result = QueryBuilder::for(Product::class, $request)
-            ->fromResource(ProductResource::class)
-            ->allowedFilters(['status' => new ExactFilter()])
-            ->paginate()
-        ;
+    $result = QueryBuilder::for(Product::class, $request)
+        ->fromResource(ProductResource::class)
+        ->allowedFilters(['status' => new ExactFilter()])
+        ->paginate()
+    ;
 
-        $array = $result->toArray();
-        $this->assertCount(1, $array['data']);
-    }
-}
+    $array = $result->toArray();
+    expect($array['data'])->toHaveCount(1);
+});

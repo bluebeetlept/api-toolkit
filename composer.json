@@ -24,7 +24,7 @@
         "eufaturo/coding-standards": "dev-main",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^11.0",
-        "phpunit/phpunit": "^13.0"
+        "pestphp/pest": "^4.6.3"
     },
     "autoload": {
         "psr-4": {
@@ -37,10 +37,10 @@
         }
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit -c phpunit.dist.xml",
+        "test": "./vendor/bin/pest -c phpunit.dist.xml",
         "test:coverage": [
             "@putenv XDEBUG_MODE=coverage",
-            "./vendor/bin/phpunit -c phpunit-coverage.dist.xml"
+            "./vendor/bin/pest -c phpunit-coverage.dist.xml"
         ],
         "ecs:fix": "./vendor/bin/ecs --fix",
         "ecs:check": "./vendor/bin/ecs",
@@ -55,7 +55,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "php-http/discovery": true,
-            "eufaturo/coding-standards": true
+            "eufaturo/coding-standards": true,
+            "pestphp/pest-plugin": true
         }
     },
     "extra": {

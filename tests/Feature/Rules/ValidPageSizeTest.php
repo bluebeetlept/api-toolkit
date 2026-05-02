@@ -5,62 +5,44 @@ declare(strict_types = 1);
 namespace BlueBeetle\ApiToolkit\Tests\Feature\Rules;
 
 use BlueBeetle\ApiToolkit\Rules\ValidPageSize;
-use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Support\Facades\Validator;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\TestDox;
 
-final class ValidPageSizeTest extends TestCase
-{
-    #[Test]
-    #[TestDox('it passes for valid page sizes')]
-    public function it_passes_valid_sizes(): void
-    {
-        foreach ([10, 20, 40, 80, 100] as $size) {
-            $validator = Validator::make(
-                ['size' => $size],
-                ['size' => [new ValidPageSize()]],
-            );
-
-            $this->assertTrue($validator->passes(), "Expected {$size} to be valid");
-        }
-    }
-
-    #[Test]
-    #[TestDox('it fails for invalid page sizes')]
-    public function it_fails_invalid_sizes(): void
-    {
-        foreach ([0, 5, 15, 50, 200] as $size) {
-            $validator = Validator::make(
-                ['size' => $size],
-                ['size' => [new ValidPageSize()]],
-            );
-
-            $this->assertFalse($validator->passes(), "Expected {$size} to be invalid");
-        }
-    }
-
-    #[Test]
-    #[TestDox('it supports custom valid sizes')]
-    public function it_supports_custom_sizes(): void
-    {
+it('passes for valid page sizes', function () {
+    foreach ([10, 20, 40, 80, 100] as $size) {
         $validator = Validator::make(
-            ['size' => 25],
-            ['size' => [new ValidPageSize([25, 50, 75])]],
-        );
-
-        $this->assertTrue($validator->passes());
-    }
-
-    #[Test]
-    #[TestDox('it provides error message')]
-    public function it_provides_error_message(): void
-    {
-        $validator = Validator::make(
-            ['size' => 15],
+            ['size' => $size],
             ['size' => [new ValidPageSize()]],
         );
 
-        $this->assertStringContainsString('15', $validator->errors()->first('size'));
+        expect($validator->passes())->toBeTrue("Expected {$size} to be valid");
     }
-}
+});
+
+it('fails for invalid page sizes', function () {
+    foreach ([0, 5, 15, 50, 200] as $size) {
+        $validator = Validator::make(
+            ['size' => $size],
+            ['size' => [new ValidPageSize()]],
+        );
+
+        expect($validator->passes())->toBeFalse("Expected {$size} to be invalid");
+    }
+});
+
+it('supports custom valid sizes', function () {
+    $validator = Validator::make(
+        ['size' => 25],
+        ['size' => [new ValidPageSize([25, 50, 75])]],
+    );
+
+    expect($validator->passes())->toBeTrue();
+});
+
+it('provides error message', function () {
+    $validator = Validator::make(
+        ['size' => 15],
+        ['size' => [new ValidPageSize()]],
+    );
+
+    expect($validator->errors()->first('size'))->toContain('15');
+});

@@ -17,828 +17,64 @@ use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubPipeRulesFormReq
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubThrowingFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubTypedFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\OpenApiStubResource;
-use BlueBeetle\ApiToolkit\Tests\TestCase;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\TestDox;
 
-final class DocumentBuilderTest extends TestCase
+function makeListEndpoint(): EndpointDefinition
 {
-    #[Test]
-    #[TestDox('it builds a valid OpenAPI 3.1 document')]
-    public function it_builds_valid_document(): void
-    {
-        $builder = new DocumentBuilder(
-            title: 'Test API',
-            version: '2.0.0',
-            description: 'A test API',
-        );
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: true,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'index',
-                formRequestClass: null,
-                routeName: 'api.v1.stubs.index',
-            ),
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'show',
-                formRequestClass: null,
-                routeName: 'api.v1.stubs.show',
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertSame('3.1.0', $document['openapi']);
-        $this->assertSame('Test API', $document['info']['title']);
-        $this->assertSame('2.0.0', $document['info']['version']);
-        $this->assertSame('A test API', $document['info']['description']);
-    }
-
-    #[Test]
-    #[TestDox('it generates paths for list endpoints')]
-    public function it_generates_list_paths(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: true,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'index',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertArrayHasKey('/api/v1/stubs', $document['paths']);
-        $this->assertArrayHasKey('get', $document['paths']['/api/v1/stubs']);
-        $this->assertArrayHasKey('parameters', $document['paths']['/api/v1/stubs']['get']);
-    }
-
-    #[Test]
-    #[TestDox('it generates paths for single resource endpoints')]
-    public function it_generates_single_paths(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'show',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $path = $document['paths']['/api/v1/stubs/{stub}'];
-
-        $this->assertArrayHasKey('get', $path);
-        $this->assertArrayHasKey('parameters', $path);
-        $this->assertSame('stub', $path['parameters'][0]['name']);
-        $this->assertSame('path', $path['parameters'][0]['in']);
-    }
-
-    #[Test]
-    #[TestDox('it registers resource schemas in components')]
-    public function it_registers_schemas(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: true,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'index',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertArrayHasKey('OpenApiStub', $document['components']['schemas']);
-        $this->assertArrayHasKey('OpenApiStubCollection', $document['components']['schemas']);
-        $this->assertArrayHasKey('JsonApiError', $document['components']['schemas']);
-    }
-
-    #[Test]
-    #[TestDox('it generates correct tags')]
-    public function it_generates_tags(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: true,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'index',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertSame(['Open Api Stubs'], $document['paths']['/api/v1/stubs']['get']['tags']);
-    }
-
-    #[Test]
-    #[TestDox('it handles POST endpoints with 201 status')]
-    public function it_handles_post_endpoints(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $responses = $document['paths']['/api/v1/stubs']['post']['responses'];
-
-        $this->assertArrayHasKey('201', $responses);
-        $this->assertArrayHasKey('422', $responses);
-    }
-
-    #[Test]
-    #[TestDox('it handles DELETE endpoints with 204 status')]
-    public function it_handles_delete_endpoints(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['DELETE'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'destroy',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $responses = $document['paths']['/api/v1/stubs/{stub}']['delete']['responses'];
-
-        $this->assertArrayHasKey('204', $responses);
-    }
-
-    #[Test]
-    #[TestDox('it omits description when empty')]
-    public function it_omits_empty_description(): void
-    {
-        $builder = new DocumentBuilder(title: 'API', version: '1.0.0', description: '');
-
-        $document = $builder->build([$this->makeListEndpoint()]);
-
-        $this->assertArrayNotHasKey('description', $document['info']);
-    }
-
-    #[Test]
-    #[TestDox('it omits servers when empty')]
-    public function it_omits_empty_servers(): void
-    {
-        $builder = new DocumentBuilder(servers: []);
-
-        $document = $builder->build([$this->makeListEndpoint()]);
-
-        $this->assertArrayNotHasKey('servers', $document);
-    }
-
-    #[Test]
-    #[TestDox('it omits security when empty')]
-    public function it_omits_empty_security(): void
-    {
-        $builder = new DocumentBuilder(security: []);
-
-        $document = $builder->build([$this->makeListEndpoint()]);
-
-        $this->assertArrayNotHasKey('security', $document);
-    }
-
-    #[Test]
-    #[TestDox('it omits securitySchemes when empty')]
-    public function it_omits_empty_security_schemes(): void
-    {
-        $builder = new DocumentBuilder(securitySchemes: []);
-
-        $document = $builder->build([$this->makeListEndpoint()]);
-
-        $this->assertArrayNotHasKey('securitySchemes', $document['components']);
-    }
-
-    #[Test]
-    #[TestDox('it does not duplicate tags for same resource')]
-    public function it_deduplicates_tags(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            $this->makeListEndpoint(),
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'show',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $tagNames = array_column($document['tags'], 'name');
-        $this->assertCount(1, $tagNames);
-        $this->assertSame('Open Api Stubs', $tagNames[0]);
-    }
-
-    #[Test]
-    #[TestDox('it omits operationId when route has no name')]
-    public function it_omits_operation_id_without_route_name(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: true,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'index',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertArrayNotHasKey('operationId', $document['paths']['/api/v1/stubs']['get']);
-    }
-
-    #[Test]
-    #[TestDox('it generates PUT/PATCH summary')]
-    public function it_generates_put_patch_summary(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['PUT', 'PATCH'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'update',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertSame('Update Open Api Stub', $document['paths']['/api/v1/stubs/{stub}']['put']['summary']);
-        $this->assertSame('Update Open Api Stub', $document['paths']['/api/v1/stubs/{stub}']['patch']['summary']);
-    }
-
-    #[Test]
-    #[TestDox('it generates DELETE summary')]
-    public function it_generates_delete_summary(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['DELETE'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'destroy',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertSame('Delete Open Api Stub', $document['paths']['/api/v1/stubs/{stub}']['delete']['summary']);
-    }
-
-    #[Test]
-    #[TestDox('it converts optional path parameters')]
-    public function it_converts_optional_path_params(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub?}',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'show',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        // Optional param should have ? removed
-        $this->assertArrayHasKey('/api/v1/stubs/{stub}', $document['paths']);
-    }
-
-    #[Test]
-    #[TestDox('it generates path parameter description matching resource name')]
-    public function it_generates_matching_param_description(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'show',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $params = $document['paths']['/api/v1/stubs/{stub}']['parameters'];
-        // 'stub' matches resource name 'OpenApiStub' headline → should get "The Stub ID" or similar
-        $this->assertArrayHasKey('description', $params[0]);
-    }
-
-    #[Test]
-    #[TestDox('it generates non-matching path parameter description')]
-    public function it_generates_non_matching_param_description(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{category_id}',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'show',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $params = $document['paths']['/api/v1/stubs/{category_id}']['parameters'];
-        $this->assertStringContainsString('Category Id', $params[0]['description']);
-    }
-
-    #[Test]
-    #[TestDox('it builds request body from form request rules')]
-    public function it_builds_request_body(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $requestBody = $document['paths']['/api/v1/stubs']['post']['requestBody'];
-
-        $this->assertTrue($requestBody['required']);
-        $schema = $requestBody['content']['application/json']['schema'];
-        $this->assertSame('object', $schema['type']);
-        $this->assertArrayHasKey('name', $schema['properties']);
-        $this->assertArrayHasKey('email', $schema['properties']);
-        $this->assertContains('name', $schema['required']);
-    }
-
-    #[Test]
-    #[TestDox('it maps form rules to OpenAPI types')]
-    public function it_maps_rules_to_openapi_types(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubTypedFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $schema = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema'];
-        $props = $schema['properties'];
-
-        $this->assertSame('integer', $props['age']['type']);
-        $this->assertSame('boolean', $props['active']['type']);
-        $this->assertSame('string', $props['email']['type']);
-        $this->assertSame('email', $props['email']['format']);
-        $this->assertSame('string', $props['website']['type']);
-        $this->assertSame('uri', $props['website']['format']);
-        $this->assertSame('string', $props['birthday']['type']);
-        $this->assertSame('date', $props['birthday']['format']);
-        $this->assertSame('array', $props['tags']['type']);
-        $this->assertTrue($props['description']['nullable']);
-    }
-
-    #[Test]
-    #[TestDox('it maps min and max rules to schema constraints')]
-    public function it_maps_min_max_rules(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubMinMaxFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
-
-        $this->assertSame(3, $props['name']['minLength']);
-        $this->assertSame(255, $props['name']['maxLength']);
-    }
-
-    #[Test]
-    #[TestDox('it skips nested dot-notation rules in request body')]
-    public function it_skips_nested_rules(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubNestedFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
-
-        $this->assertArrayHasKey('items', $props);
-        $this->assertArrayNotHasKey('items.name', $props);
-    }
-
-    #[Test]
-    #[TestDox('it omits request body when form request has no rules')]
-    public function it_omits_empty_request_body(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubEmptyFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertArrayNotHasKey('requestBody', $document['paths']['/api/v1/stubs']['post']);
-    }
-
-    #[Test]
-    #[TestDox('it includes 422 for PUT/PATCH endpoints')]
-    public function it_includes_validation_error_for_put_patch(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['PUT'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'update',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $responses = $document['paths']['/api/v1/stubs/{stub}']['put']['responses'];
-
-        $this->assertArrayHasKey('422', $responses);
-        $this->assertArrayHasKey('401', $responses);
-        $this->assertArrayHasKey('404', $responses);
-    }
-
-    #[Test]
-    #[TestDox('list endpoints do not include 404 response')]
-    public function it_omits_404_for_list(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $document = $builder->build([$this->makeListEndpoint()]);
-
-        $responses = $document['paths']['/api/v1/stubs']['get']['responses'];
-
-        $this->assertArrayNotHasKey('404', $responses);
-    }
-
-    #[Test]
-    #[TestDox('it handles rules as pipe-delimited strings')]
-    public function it_handles_pipe_delimited_rules(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubPipeRulesFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
-
-        $this->assertSame('integer', $props['age']['type']);
-    }
-
-    #[Test]
-    #[TestDox('it generates list GET summary')]
-    public function it_generates_list_get_summary(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $document = $builder->build([$this->makeListEndpoint()]);
-
-        $this->assertSame('List Open Api Stubs', $document['paths']['/api/v1/stubs']['get']['summary']);
-    }
-
-    #[Test]
-    #[TestDox('it generates single GET summary')]
-    public function it_generates_single_get_summary(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs/{stub}',
-                httpMethods: ['GET'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'show',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertSame('Get Open Api Stub', $document['paths']['/api/v1/stubs/{stub}']['get']['summary']);
-    }
-
-    #[Test]
-    #[TestDox('it skips non-string rules in rulesToOpenApiType')]
-    public function it_skips_non_string_rules(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubObjectRuleFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
-        // Should still have string type (non-string rule objects are skipped)
-        $this->assertSame('string', $props['name']['type']);
-    }
-
-    #[Test]
-    #[TestDox('it generates default summary for unknown HTTP method')]
-    public function it_generates_default_summary(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['OPTIONS'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'options',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertSame('OPTIONS Open Api Stub', $document['paths']['/api/v1/stubs']['options']['summary']);
-    }
-
-    #[Test]
-    #[TestDox('it handles formRequest that throws on instantiation')]
-    public function it_handles_throwing_form_request(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubThrowingFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertArrayNotHasKey('requestBody', $document['paths']['/api/v1/stubs']['post']);
-    }
-
-    #[Test]
-    #[TestDox('it handles formRequest without rules method')]
-    public function it_handles_no_rules_method(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubNoRulesMethodRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertArrayNotHasKey('requestBody', $document['paths']['/api/v1/stubs']['post']);
-    }
-
-    #[Test]
-    #[TestDox('it generates POST summary')]
-    public function it_generates_post_summary(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: null,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $this->assertSame('Create Open Api Stub', $document['paths']['/api/v1/stubs']['post']['summary']);
-    }
-
-    #[Test]
-    #[TestDox('it omits required array when no fields are required')]
-    public function it_omits_required_when_none(): void
-    {
-        $builder = new DocumentBuilder();
-
-        $endpoints = [
-            new EndpointDefinition(
-                path: '/api/v1/stubs',
-                httpMethods: ['POST'],
-                resourceClass: OpenApiStubResource::class,
-                isList: false,
-                controllerClass: 'App\Controllers\StubController',
-                methodName: 'store',
-                formRequestClass: DocBuilderStubOptionalFormRequest::class,
-                routeName: null,
-            ),
-        ];
-
-        $document = $builder->build($endpoints);
-
-        $schema = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema'];
-        $this->assertArrayNotHasKey('required', $schema);
-    }
-
-    private function makeListEndpoint(): EndpointDefinition
-    {
-        return new EndpointDefinition(
+    return new EndpointDefinition(
+        path: '/api/v1/stubs',
+        httpMethods: ['GET'],
+        resourceClass: OpenApiStubResource::class,
+        isList: true,
+        controllerClass: 'App\Controllers\StubController',
+        methodName: 'index',
+        formRequestClass: null,
+        routeName: null,
+    );
+}
+
+it('builds a valid OpenAPI 3.1 document', function () {
+    $builder = new DocumentBuilder(
+        title: 'Test API',
+        version: '2.0.0',
+        description: 'A test API',
+    );
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: true,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'index',
+            formRequestClass: null,
+            routeName: 'api.v1.stubs.index',
+        ),
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: null,
+            routeName: 'api.v1.stubs.show',
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['openapi'])->toBe('3.1.0');
+    expect($document['info']['title'])->toBe('Test API');
+    expect($document['info']['version'])->toBe('2.0.0');
+    expect($document['info']['description'])->toBe('A test API');
+});
+
+it('generates paths for list endpoints', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
             path: '/api/v1/stubs',
             httpMethods: ['GET'],
             resourceClass: OpenApiStubResource::class,
@@ -847,6 +83,659 @@ final class DocumentBuilderTest extends TestCase
             methodName: 'index',
             formRequestClass: null,
             routeName: null,
-        );
-    }
-}
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths'])->toHaveKey('/api/v1/stubs');
+    expect($document['paths']['/api/v1/stubs'])->toHaveKey('get');
+    expect($document['paths']['/api/v1/stubs']['get'])->toHaveKey('parameters');
+});
+
+it('generates paths for single resource endpoints', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $path = $document['paths']['/api/v1/stubs/{stub}'];
+
+    expect($path)->toHaveKey('get');
+    expect($path)->toHaveKey('parameters');
+    expect($path['parameters'][0]['name'])->toBe('stub');
+    expect($path['parameters'][0]['in'])->toBe('path');
+});
+
+it('registers resource schemas in components', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: true,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'index',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['components']['schemas'])->toHaveKey('OpenApiStub');
+    expect($document['components']['schemas'])->toHaveKey('OpenApiStubCollection');
+    expect($document['components']['schemas'])->toHaveKey('JsonApiError');
+});
+
+it('generates correct tags', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: true,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'index',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs']['get']['tags'])->toBe(['Open Api Stubs']);
+});
+
+it('handles POST endpoints with 201 status', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $responses = $document['paths']['/api/v1/stubs']['post']['responses'];
+
+    expect($responses)->toHaveKey('201');
+    expect($responses)->toHaveKey('422');
+});
+
+it('handles DELETE endpoints with 204 status', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['DELETE'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'destroy',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $responses = $document['paths']['/api/v1/stubs/{stub}']['delete']['responses'];
+
+    expect($responses)->toHaveKey('204');
+});
+
+it('omits description when empty', function () {
+    $builder = new DocumentBuilder(title: 'API', version: '1.0.0', description: '');
+
+    $document = $builder->build([makeListEndpoint()]);
+
+    expect($document['info'])->not->toHaveKey('description');
+});
+
+it('omits servers when empty', function () {
+    $builder = new DocumentBuilder(servers: []);
+
+    $document = $builder->build([makeListEndpoint()]);
+
+    expect($document)->not->toHaveKey('servers');
+});
+
+it('omits security when empty', function () {
+    $builder = new DocumentBuilder(security: []);
+
+    $document = $builder->build([makeListEndpoint()]);
+
+    expect($document)->not->toHaveKey('security');
+});
+
+it('omits securitySchemes when empty', function () {
+    $builder = new DocumentBuilder(securitySchemes: []);
+
+    $document = $builder->build([makeListEndpoint()]);
+
+    expect($document['components'])->not->toHaveKey('securitySchemes');
+});
+
+it('does not duplicate tags for same resource', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        makeListEndpoint(),
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $tagNames = array_column($document['tags'], 'name');
+    expect($tagNames)->toHaveCount(1);
+    expect($tagNames[0])->toBe('Open Api Stubs');
+});
+
+it('omits operationId when route has no name', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: true,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'index',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs']['get'])->not->toHaveKey('operationId');
+});
+
+it('generates PUT/PATCH summary', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['PUT', 'PATCH'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'update',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs/{stub}']['put']['summary'])->toBe('Update Open Api Stub');
+    expect($document['paths']['/api/v1/stubs/{stub}']['patch']['summary'])->toBe('Update Open Api Stub');
+});
+
+it('generates DELETE summary', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['DELETE'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'destroy',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs/{stub}']['delete']['summary'])->toBe('Delete Open Api Stub');
+});
+
+it('converts optional path parameters', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub?}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths'])->toHaveKey('/api/v1/stubs/{stub}');
+});
+
+it('generates path parameter description matching resource name', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $params = $document['paths']['/api/v1/stubs/{stub}']['parameters'];
+    expect($params[0])->toHaveKey('description');
+});
+
+it('generates non-matching path parameter description', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{category_id}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $params = $document['paths']['/api/v1/stubs/{category_id}']['parameters'];
+    expect($params[0]['description'])->toContain('Category Id');
+});
+
+it('builds request body from form request rules', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $requestBody = $document['paths']['/api/v1/stubs']['post']['requestBody'];
+
+    expect($requestBody['required'])->toBeTrue();
+    $schema = $requestBody['content']['application/json']['schema'];
+    expect($schema['type'])->toBe('object');
+    expect($schema['properties'])->toHaveKey('name');
+    expect($schema['properties'])->toHaveKey('email');
+    expect($schema['required'])->toContain('name');
+});
+
+it('maps form rules to OpenAPI types', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubTypedFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $schema = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema'];
+    $props = $schema['properties'];
+
+    expect($props['age']['type'])->toBe('integer');
+    expect($props['active']['type'])->toBe('boolean');
+    expect($props['email']['type'])->toBe('string');
+    expect($props['email']['format'])->toBe('email');
+    expect($props['website']['type'])->toBe('string');
+    expect($props['website']['format'])->toBe('uri');
+    expect($props['birthday']['type'])->toBe('string');
+    expect($props['birthday']['format'])->toBe('date');
+    expect($props['tags']['type'])->toBe('array');
+    expect($props['description']['nullable'])->toBeTrue();
+});
+
+it('maps min and max rules to schema constraints', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubMinMaxFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+    expect($props['name']['minLength'])->toBe(3);
+    expect($props['name']['maxLength'])->toBe(255);
+});
+
+it('skips nested dot-notation rules in request body', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubNestedFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+    expect($props)->toHaveKey('items');
+    expect($props)->not->toHaveKey('items.name');
+});
+
+it('omits request body when form request has no rules', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubEmptyFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs']['post'])->not->toHaveKey('requestBody');
+});
+
+it('includes 422 for PUT/PATCH endpoints', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['PUT'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'update',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $responses = $document['paths']['/api/v1/stubs/{stub}']['put']['responses'];
+
+    expect($responses)->toHaveKey('422');
+    expect($responses)->toHaveKey('401');
+    expect($responses)->toHaveKey('404');
+});
+
+it('does not include 404 response for list endpoints', function () {
+    $builder = new DocumentBuilder();
+
+    $document = $builder->build([makeListEndpoint()]);
+
+    $responses = $document['paths']['/api/v1/stubs']['get']['responses'];
+
+    expect($responses)->not->toHaveKey('404');
+});
+
+it('handles rules as pipe-delimited strings', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubPipeRulesFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+    expect($props['age']['type'])->toBe('integer');
+});
+
+it('generates list GET summary', function () {
+    $builder = new DocumentBuilder();
+
+    $document = $builder->build([makeListEndpoint()]);
+
+    expect($document['paths']['/api/v1/stubs']['get']['summary'])->toBe('List Open Api Stubs');
+});
+
+it('generates single GET summary', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs/{stub}']['get']['summary'])->toBe('Get Open Api Stub');
+});
+
+it('skips non-string rules in rulesToOpenApiType', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubObjectRuleFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
+    expect($props['name']['type'])->toBe('string');
+});
+
+it('generates default summary for unknown HTTP method', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['OPTIONS'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'options',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs']['options']['summary'])->toBe('OPTIONS Open Api Stub');
+});
+
+it('handles formRequest that throws on instantiation', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubThrowingFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs']['post'])->not->toHaveKey('requestBody');
+});
+
+it('handles formRequest without rules method', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubNoRulesMethodRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs']['post'])->not->toHaveKey('requestBody');
+});
+
+it('generates POST summary', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: null,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    expect($document['paths']['/api/v1/stubs']['post']['summary'])->toBe('Create Open Api Stub');
+});
+
+it('omits required array when no fields are required', function () {
+    $builder = new DocumentBuilder();
+
+    $endpoints = [
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['POST'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'store',
+            formRequestClass: DocBuilderStubOptionalFormRequest::class,
+            routeName: null,
+        ),
+    ];
+
+    $document = $builder->build($endpoints);
+
+    $schema = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema'];
+    expect($schema)->not->toHaveKey('required');
+});
