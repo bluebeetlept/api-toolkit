@@ -4,13 +4,14 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Tests\Feature;
 
+use BlueBeetle\ApiToolkit\Http\SuccessResponse;
 use BlueBeetle\ApiToolkit\Parsers\Filters\ExactFilter;
-use BlueBeetle\ApiToolkit\Parsers\Filters\PartialFilter;
 use BlueBeetle\ApiToolkit\QueryBuilder;
-use BlueBeetle\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\StubModel;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\StubQueryResource;
 use BlueBeetle\ApiToolkit\Tests\TestCase;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -182,54 +183,136 @@ final class QueryBuilderTest extends TestCase
         $this->assertEmpty($query->getQuery()->orders ?? []);
         $this->assertEmpty($query->getEagerLoads());
     }
-}
 
-class StubModel extends Model
-{
-    protected $table = 'stub_models';
-}
-
-class StubQueryResource extends Resource
-{
-    protected string $type = 'stubs';
-
-    public function attributes($model): array
+    #[Test]
+    #[TestDox('it returns a SuccessResponse from paginate')]
+    public function it_paginates(): void
     {
-        return ['name' => $model->name];
+        Product::create([
+            'public_id' => 'prod-1',
+            'name' => 'Widget',
+            'code' => 'W01',
+            'price_in_cents' => 1000,
+            'featured' => false,
+        ]);
+
+        $request = Request::create('/', 'GET', ['page' => ['size' => 10]]);
+
+        $result = QueryBuilder::for(Product::class, $request)
+            ->fromResource(ProductResource::class)
+            ->paginate()
+        ;
+
+        $this->assertInstanceOf(SuccessResponse::class, $result);
+
+        $array = $result->toArray();
+        $this->assertArrayHasKey('data', $array);
+        $this->assertArrayHasKey('meta', $array);
+        $this->assertArrayHasKey('links', $array);
     }
 
-    public function relationships(): array
+    #[Test]
+    #[TestDox('it returns a SuccessResponse from cursorPaginate')]
+    public function it_cursor_paginates(): void
     {
-        return [
-            'category' => StubCategoryResource::class,
-        ];
+        Product::create([
+            'public_id' => 'prod-1',
+            'name' => 'Widget',
+            'code' => 'W01',
+            'price_in_cents' => 1000,
+            'featured' => false,
+        ]);
+
+        $request = Request::create('/', 'GET', ['page' => ['size' => 10]]);
+
+        $result = QueryBuilder::for(Product::class, $request)
+            ->fromResource(ProductResource::class)
+            ->cursorPaginate()
+        ;
+
+        $this->assertInstanceOf(SuccessResponse::class, $result);
+
+        $array = $result->toArray();
+        $this->assertArrayHasKey('data', $array);
+        $this->assertArrayHasKey('meta', $array);
     }
 
-    public function allowedFilters(): array
+    #[Test]
+    #[TestDox('it returns a SuccessResponse from get')]
+    public function it_gets(): void
     {
-        return [
-            'name' => new PartialFilter(),
-            'status' => new ExactFilter(),
-        ];
+        Product::create([
+            'public_id' => 'prod-1',
+            'name' => 'Widget',
+            'code' => 'W01',
+            'price_in_cents' => 1000,
+            'featured' => false,
+        ]);
+
+        $request = Request::create('/');
+
+        $result = QueryBuilder::for(Product::class, $request)
+            ->fromResource(ProductResource::class)
+            ->get()
+        ;
+
+        $this->assertInstanceOf(SuccessResponse::class, $result);
+
+        $array = $result->toArray();
+        $this->assertArrayHasKey('data', $array);
     }
 
-    public function allowedSorts(): array
+    #[Test]
+    #[TestDox('apply returns the builder for further chaining')]
+    public function it_applies_and_returns_builder(): void
     {
-        return ['name', 'created_at'];
+        $request = Request::create('/', 'GET', ['filter' => ['status' => 'active']]);
+
+        $builder = QueryBuilder::for(StubModel::class, $request)
+            ->allowedFilters(['status' => new ExactFilter()])
+            ->apply()
+        ;
+
+        $this->assertInstanceOf(QueryBuilder::class, $builder);
+
+        $query = $builder->getQuery();
+        $this->assertStringContainsString('status', $query->toSql());
     }
 
-    public function defaultSort(): string | null
+    #[Test]
+    #[TestDox('paginate applies filters and sorts before paginating')]
+    public function it_applies_filters_before_paginating(): void
     {
-        return '-created_at';
-    }
-}
+        Product::create([
+            'public_id' => 'prod-1',
+            'name' => 'Widget',
+            'code' => 'W01',
+            'price_in_cents' => 1000,
+            'featured' => false,
+            'status' => 'active',
+        ]);
 
-class StubCategoryResource extends Resource
-{
-    protected string $type = 'categories';
+        Product::create([
+            'public_id' => 'prod-2',
+            'name' => 'Gadget',
+            'code' => 'G01',
+            'price_in_cents' => 2000,
+            'featured' => false,
+            'status' => 'archived',
+        ]);
 
-    public function attributes($model): array
-    {
-        return ['name' => $model->name];
+        $request = Request::create('/', 'GET', [
+            'filter' => ['status' => 'active'],
+            'page' => ['size' => 10],
+        ]);
+
+        $result = QueryBuilder::for(Product::class, $request)
+            ->fromResource(ProductResource::class)
+            ->allowedFilters(['status' => new ExactFilter()])
+            ->paginate()
+        ;
+
+        $array = $result->toArray();
+        $this->assertCount(1, $array['data']);
     }
 }

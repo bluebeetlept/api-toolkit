@@ -5,8 +5,15 @@ declare(strict_types = 1);
 namespace BlueBeetle\ApiToolkit\Tests\Acceptance;
 
 use BlueBeetle\ApiToolkit\Exceptions\ConfigureExceptionHandler;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Exceptions\StubDomainException;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
 use BlueBeetle\ApiToolkit\Tests\TestCase;
+use BlueBeetle\IdempotencyMiddleware\IdempotencyException;
+use Exception;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\LazyLoadingViolationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\Test;
@@ -14,6 +21,8 @@ use PHPUnit\Framework\Attributes\TestDox;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 final class ExceptionHandlerTest extends TestCase
 {
@@ -144,5 +153,203 @@ final class ExceptionHandlerTest extends TestCase
 
         $response->assertStatus(Response::HTTP_BAD_REQUEST);
         $response->assertJsonMissingPath('errors.0.meta');
+    }
+
+    #[Test]
+    #[TestDox('it renders query exception as 400')]
+    public function it_renders_query_exception(): void
+    {
+        $this->app['config']->set('app.debug', false);
+
+        Route::get('/test', fn () => throw new QueryException(
+            connectionName: 'testing',
+            sql: 'SELECT * FROM invalid_table',
+            bindings: [],
+            previous: new Exception('Table not found'),
+        ));
+
+        $response = $this->get('/test');
+
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
+        $response->assertJsonPath('errors.0.code', 'invalid_request_error');
+        $response->assertJsonPath('errors.0.detail', 'There was a problem during a database query');
+    }
+
+    #[Test]
+    #[TestDox('it renders query exception with detail when debug is on')]
+    public function it_renders_query_exception_with_debug(): void
+    {
+        $this->app['config']->set('app.debug', true);
+
+        Route::get('/test', fn () => throw new QueryException(
+            connectionName: 'testing',
+            sql: 'SELECT * FROM invalid_table',
+            bindings: [],
+            previous: new Exception('Table not found'),
+        ));
+
+        $response = $this->get('/test');
+
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
+        $response->assertJsonPath('errors.0.code', 'invalid_request_error');
+        // When debug is on, the actual exception message is shown
+        $this->assertNotSame('There was a problem during a database query', $response->json('errors.0.detail'));
+    }
+
+    #[Test]
+    #[TestDox('it renders lazy loading violation as 400')]
+    public function it_renders_lazy_loading_violation(): void
+    {
+        $this->app['config']->set('app.debug', false);
+
+        Route::get('/test', fn () => throw new LazyLoadingViolationException(
+            model: new Product(),
+            relation: 'category',
+        ));
+
+        $response = $this->get('/test');
+
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
+        $response->assertJsonPath('errors.0.code', 'invalid_request_error');
+        $response->assertJsonPath('errors.0.detail', 'There was a problem during a database query');
+    }
+
+    #[Test]
+    #[TestDox('it renders model not found exception')]
+    public function it_renders_model_not_found(): void
+    {
+        $modelException = (new ModelNotFoundException())->setModel(Product::class, ['abc-123']);
+
+        Route::get('/test', fn () => throw new NotFoundHttpException(
+            message: '',
+            previous: $modelException,
+        ));
+
+        $response = $this->get('/test');
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+        $response->assertJsonPath('errors.0.code', 'invalid_request_error');
+        $response->assertJsonPath('errors.0.title', 'Not Found');
+        $this->assertStringContainsString('product', $response->json('errors.0.detail'));
+        $this->assertStringContainsString('abc-123', $response->json('errors.0.detail'));
+    }
+
+    #[Test]
+    #[TestDox('it renders idempotency exception')]
+    public function it_renders_idempotency_exception(): void
+    {
+        Route::post('/test', fn () => throw new IdempotencyException('Request already processed'));
+
+        $response = $this->postJson('/test');
+
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
+        $response->assertJsonPath('errors.0.code', 'idempotency_error');
+        $response->assertJsonPath('errors.0.title', 'Idempotency Error');
+        $response->assertJsonPath('errors.0.detail', 'Request already processed');
+    }
+
+    #[Test]
+    #[TestDox('it renders route not found exception')]
+    public function it_renders_route_not_found(): void
+    {
+        Route::get('/test', fn () => throw new RouteNotFoundException(
+            'Route [api.products.index] not defined.',
+        ));
+
+        $response = $this->get('/test');
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+        $response->assertJsonPath('errors.0.code', 'invalid_request_error');
+        $response->assertJsonPath('errors.0.title', 'Not Found');
+        $this->assertStringContainsString('api.products.index', $response->json('errors.0.detail'));
+    }
+
+    #[Test]
+    #[TestDox('it renders domain exceptions as 400')]
+    public function it_renders_domain_exceptions(): void
+    {
+        $this->app['config']->set('api-toolkit.exceptions.domain', [
+            StubDomainException::class,
+        ]);
+
+        Route::get('/test', fn () => throw new StubDomainException('Insufficient stock'));
+
+        $response = $this->get('/test');
+
+        $response->assertStatus(Response::HTTP_BAD_REQUEST);
+        $response->assertJsonPath('errors.0.code', 'invalid_request_error');
+        $response->assertJsonPath('errors.0.title', 'Bad Request');
+        $response->assertJsonPath('errors.0.detail', 'Insufficient stock');
+    }
+
+    #[Test]
+    #[TestDox('it respects dont_report config')]
+    public function it_respects_dont_report_config(): void
+    {
+        $this->app['config']->set('api-toolkit.exceptions.dont_report', [
+            RuntimeException::class,
+        ]);
+
+        Route::get('/test', fn () => throw new RuntimeException('Should not be reported'));
+
+        $response = $this->get('/test');
+
+        // Still renders the response, but the exception should not be reported
+        $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    #[Test]
+    #[TestDox('it renders not found for root path')]
+    public function it_renders_not_found_for_root_path(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+        $this->assertStringContainsString('GET: /', $response->json('errors.0.detail'));
+    }
+
+    #[Test]
+    #[TestDox('it sets json api content type on error responses')]
+    public function it_sets_content_type(): void
+    {
+        Route::get('/test', fn () => throw new RuntimeException('Error'));
+
+        $response = $this->get('/test');
+
+        $response->assertHeader('Content-Type', 'application/vnd.api+json');
+    }
+
+    #[Test]
+    #[TestDox('it renders multiple validation errors with source pointers')]
+    public function it_renders_multiple_validation_errors(): void
+    {
+        Route::post('/test', function () {
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['email' => 'not-an-email'],
+                [
+                    'name' => ['required'],
+                    'email' => ['required', 'email'],
+                    'age' => ['required', 'integer'],
+                ],
+            );
+
+            throw new ValidationException($validator);
+        });
+
+        $response = $this->postJson('/test');
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        $errors = $response->json('errors');
+
+        // name required + email invalid + age required = 3 errors
+        $this->assertGreaterThanOrEqual(3, count($errors));
+
+        // All errors should have validation_error code
+        foreach ($errors as $error) {
+            $this->assertSame('validation_error', $error['code']);
+            $this->assertSame('Validation Error', $error['title']);
+            $this->assertArrayHasKey('pointer', $error['source']);
+        }
     }
 }

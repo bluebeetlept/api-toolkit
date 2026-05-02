@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Tests\Feature\Resources;
 
+use BadMethodCallException;
 use BlueBeetle\ApiToolkit\Resources\Resource;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
 use BlueBeetle\ApiToolkit\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -330,5 +332,55 @@ final class ResourceTest extends TestCase
         $result = $resource->toArray($model);
 
         $this->assertSame('99', $result['id']);
+    }
+
+    #[Test]
+    #[TestDox('it throws when attributes method is not implemented')]
+    public function it_throws_without_attributes(): void
+    {
+        $this->expectException(BadMethodCallException::class);
+
+        $resource = new class() extends Resource {
+            protected string $type = 'items';
+        };
+
+        $model = new stdClass();
+        $model->id = '1';
+
+        $resource->toArray($model);
+    }
+
+    #[Test]
+    #[TestDox('it resolves type from model instance table name')]
+    public function it_resolves_type_from_model_table(): void
+    {
+        $resource = new class() extends Resource {
+            public function attributes($model): array
+            {
+                return [];
+            }
+        };
+
+        $model = new Product();
+        $model->id = 1;
+        $model->public_id = 'prod-1';
+
+        $result = $resource->toArray($model);
+
+        $this->assertSame('products', $result['type']);
+    }
+
+    #[Test]
+    #[TestDox('it returns empty type when no model and no type set')]
+    public function it_returns_empty_type(): void
+    {
+        $resource = new class() extends Resource {
+            public function attributes($model): array
+            {
+                return [];
+            }
+        };
+
+        $this->assertSame('', $resource->resolveType());
     }
 }
