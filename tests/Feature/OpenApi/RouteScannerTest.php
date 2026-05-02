@@ -14,223 +14,167 @@ use BlueBeetle\ApiToolkit\Tests\Fixtures\Controllers\ScannerStubNoResourceContro
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Controllers\ScannerStubShowController;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\ScannerStubCreateRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
-use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Support\Facades\Route;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\TestDox;
 
-final class RouteScannerTest extends TestCase
-{
-    #[Test]
-    #[TestDox('it scans routes with resource usage')]
-    public function it_scans_routes(): void
-    {
-        Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke'])
-            ->name('api.v1.products.index')
-        ;
+it('scans routes with resource usage', function () {
+    Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke'])
+        ->name('api.v1.products.index')
+    ;
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertNotEmpty($endpoints);
-        $this->assertSame('/api/v1/products', $endpoints[0]->path);
-        $this->assertSame(ProductResource::class, $endpoints[0]->resourceClass);
-        $this->assertTrue($endpoints[0]->isList);
-        $this->assertSame('api.v1.products.index', $endpoints[0]->routeName);
-    }
+    expect($endpoints)->not->toBeEmpty();
+    expect($endpoints[0]->path)->toBe('/api/v1/products');
+    expect($endpoints[0]->resourceClass)->toBe(ProductResource::class);
+    expect($endpoints[0]->isList)->toBeTrue();
+    expect($endpoints[0]->routeName)->toBe('api.v1.products.index');
+});
 
-    #[Test]
-    #[TestDox('it ignores closure routes')]
-    public function it_ignores_closure_routes(): void
-    {
-        Route::get('/api/v1/health', fn () => response()->json(['ok' => true]));
+it('ignores closure routes', function () {
+    Route::get('/api/v1/health', fn () => response()->json(['ok' => true]));
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $endpointPaths = array_map(fn ($e) => $e->path, $endpoints);
-        $this->assertNotContains('/api/v1/health', $endpointPaths);
-    }
+    $endpointPaths = array_map(fn ($e) => $e->path, $endpoints);
+    expect($endpointPaths)->not->toContain('/api/v1/health');
+});
 
-    #[Test]
-    #[TestDox('it ignores routes without resource class')]
-    public function it_ignores_routes_without_resource(): void
-    {
-        Route::get('/api/v1/health', [ScannerStubNoResourceController::class, '__invoke']);
+it('ignores routes without resource class', function () {
+    Route::get('/api/v1/health', [ScannerStubNoResourceController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $endpointPaths = array_map(fn ($e) => $e->path, $endpoints);
-        $this->assertNotContains('/api/v1/health', $endpointPaths);
-    }
+    $endpointPaths = array_map(fn ($e) => $e->path, $endpoints);
+    expect($endpointPaths)->not->toContain('/api/v1/health');
+});
 
-    #[Test]
-    #[TestDox('it detects single resource endpoints')]
-    public function it_detects_single_endpoints(): void
-    {
-        Route::get('/api/v1/products/{product}', [ScannerStubShowController::class, '__invoke']);
+it('detects single resource endpoints', function () {
+    Route::get('/api/v1/products/{product}', [ScannerStubShowController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $productEndpoint = collect($endpoints)->firstWhere('path', '/api/v1/products/{product}');
+    $productEndpoint = collect($endpoints)->firstWhere('path', '/api/v1/products/{product}');
 
-        $this->assertNotNull($productEndpoint);
-        $this->assertFalse($productEndpoint->isList);
-    }
+    expect($productEndpoint)->not->toBeNull();
+    expect($productEndpoint->isList)->toBeFalse();
+});
 
-    #[Test]
-    #[TestDox('it detects form request class from type hints')]
-    public function it_detects_form_request(): void
-    {
-        Route::post('/api/v1/products', [ScannerStubCreateController::class, '__invoke']);
+it('detects form request class from type hints', function () {
+    Route::post('/api/v1/products', [ScannerStubCreateController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $createEndpoint = collect($endpoints)->firstWhere('path', '/api/v1/products');
+    $createEndpoint = collect($endpoints)->firstWhere('path', '/api/v1/products');
 
-        $this->assertNotNull($createEndpoint);
-        $this->assertSame(ScannerStubCreateRequest::class, $createEndpoint->formRequestClass);
-    }
+    expect($createEndpoint)->not->toBeNull();
+    expect($createEndpoint->formRequestClass)->toBe(ScannerStubCreateRequest::class);
+});
 
-    #[Test]
-    #[TestDox('it returns null form request when none type-hinted')]
-    public function it_returns_null_form_request(): void
-    {
-        Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
+it('returns null form request when none type-hinted', function () {
+    Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertNull($endpoints[0]->formRequestClass);
-    }
+    expect($endpoints[0]->formRequestClass)->toBeNull();
+});
 
-    #[Test]
-    #[TestDox('it extracts HTTP methods excluding HEAD')]
-    public function it_excludes_head_method(): void
-    {
-        Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
+it('extracts HTTP methods excluding HEAD', function () {
+    Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertContains('GET', $endpoints[0]->httpMethods);
-        $this->assertNotContains('HEAD', $endpoints[0]->httpMethods);
-    }
+    expect($endpoints[0]->httpMethods)->toContain('GET');
+    expect($endpoints[0]->httpMethods)->not->toContain('HEAD');
+});
 
-    #[Test]
-    #[TestDox('it returns empty array when no toolkit routes exist')]
-    public function it_returns_empty_for_no_routes(): void
-    {
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+it('returns empty array when no toolkit routes exist', function () {
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertSame([], $endpoints);
-    }
+    expect($endpoints)->toBe([]);
+});
 
-    #[Test]
-    #[TestDox('it detects cursorPaginate as list endpoint')]
-    public function it_detects_cursor_paginate(): void
-    {
-        Route::get('/api/v1/products', [ScannerStubCursorController::class, '__invoke']);
+it('detects cursorPaginate as list endpoint', function () {
+    Route::get('/api/v1/products', [ScannerStubCursorController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertTrue($endpoints[0]->isList);
-    }
+    expect($endpoints[0]->isList)->toBeTrue();
+});
 
-    #[Test]
-    #[TestDox('it resolves controller class and method name')]
-    public function it_resolves_controller_info(): void
-    {
-        Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
+it('resolves controller class and method name', function () {
+    Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertSame(ScannerStubListController::class, $endpoints[0]->controllerClass);
-        $this->assertSame('__invoke', $endpoints[0]->methodName);
-    }
+    expect($endpoints[0]->controllerClass)->toBe(ScannerStubListController::class);
+    expect($endpoints[0]->methodName)->toBe('__invoke');
+});
 
-    #[Test]
-    #[TestDox('it handles controller@method format')]
-    public function it_handles_at_method_format(): void
-    {
-        Route::get('/api/v1/products', ScannerStubAtMethodController::class.'@index');
+it('handles controller@method format', function () {
+    Route::get('/api/v1/products', ScannerStubAtMethodController::class.'@index');
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertNotEmpty($endpoints);
-        $this->assertSame('index', $endpoints[0]->methodName);
-    }
+    expect($endpoints)->not->toBeEmpty();
+    expect($endpoints[0]->methodName)->toBe('index');
+});
 
-    #[Test]
-    #[TestDox('it skips parameters with builtin types')]
-    public function it_skips_builtin_type_params(): void
-    {
-        Route::get('/api/v1/products', [ScannerStubBuiltinParamController::class, '__invoke']);
+it('skips parameters with builtin types', function () {
+    Route::get('/api/v1/products', [ScannerStubBuiltinParamController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertNotEmpty($endpoints);
-        $this->assertNull($endpoints[0]->formRequestClass);
-    }
+    expect($endpoints)->not->toBeEmpty();
+    expect($endpoints[0]->formRequestClass)->toBeNull();
+});
 
-    #[Test]
-    #[TestDox('it handles invokable controller string format')]
-    public function it_handles_invokable_string_format(): void
-    {
-        Route::get('/api/v1/products', ScannerStubListController::class);
+it('handles invokable controller string format', function () {
+    Route::get('/api/v1/products', ScannerStubListController::class);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertNotEmpty($endpoints);
-        $this->assertSame('__invoke', $endpoints[0]->methodName);
-    }
+    expect($endpoints)->not->toBeEmpty();
+    expect($endpoints[0]->methodName)->toBe('__invoke');
+});
 
-    #[Test]
-    #[TestDox('it ignores non-existent controller classes')]
-    public function it_ignores_non_existent_controllers(): void
-    {
-        Route::get('/api/v1/fake', 'App\NonExistent\FakeController@index');
+it('ignores non-existent controller classes', function () {
+    Route::get('/api/v1/fake', 'App\NonExistent\FakeController@index');
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $endpointPaths = array_map(fn ($e) => $e->path, $endpoints);
-        $this->assertNotContains('/api/v1/fake', $endpointPaths);
-    }
+    $endpointPaths = array_map(fn ($e) => $e->path, $endpoints);
+    expect($endpointPaths)->not->toContain('/api/v1/fake');
+});
 
-    #[Test]
-    #[TestDox('it ignores controllers where method does not exist')]
-    public function it_ignores_missing_methods(): void
-    {
-        Route::get('/api/v1/products', ScannerStubListController::class.'@nonExistentMethod');
+it('ignores controllers where method does not exist', function () {
+    Route::get('/api/v1/products', ScannerStubListController::class.'@nonExistentMethod');
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertEmpty($endpoints);
-    }
+    expect($endpoints)->toBeEmpty();
+});
 
-    #[Test]
-    #[TestDox('it resolves resource class from same namespace when no use statement')]
-    public function it_resolves_same_namespace(): void
-    {
-        // The existing controllers use `use` imports, so this is already covered
-        // This test ensures the full scanning pipeline works
-        Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
+it('resolves resource class from same namespace when no use statement', function () {
+    Route::get('/api/v1/products', [ScannerStubListController::class, '__invoke']);
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        $this->assertNotEmpty($endpoints);
-        $this->assertSame(ProductResource::class, $endpoints[0]->resourceClass);
-    }
-}
+    expect($endpoints)->not->toBeEmpty();
+    expect($endpoints[0]->resourceClass)->toBe(ProductResource::class);
+});

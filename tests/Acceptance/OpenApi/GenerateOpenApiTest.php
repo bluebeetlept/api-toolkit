@@ -4,259 +4,162 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Tests\Acceptance\OpenApi;
 
-use BlueBeetle\ApiToolkit\Http\Response;
 use BlueBeetle\ApiToolkit\OpenApi\DocumentBuilder;
 use BlueBeetle\ApiToolkit\OpenApi\RouteScanner;
-use BlueBeetle\ApiToolkit\QueryBuilder;
-use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
-use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
-use BlueBeetle\ApiToolkit\Tests\TestCase;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Controllers\ProductCreateController;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Controllers\ProductListController;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Controllers\ProductViewController;
 use Illuminate\Support\Facades\Route;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\TestDox;
 
-final class GenerateOpenApiTest extends TestCase
-{
-    private array $document;
+beforeEach(function () {
+    Route::get('/api/v1/products', [ProductListController::class, '__invoke'])
+        ->name('api.v1.products.index')
+    ;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    Route::get('/api/v1/products/{product}', [ProductViewController::class, '__invoke'])
+        ->name('api.v1.products.show')
+    ;
 
-        Route::get('/api/v1/products', [ProductListController::class, '__invoke'])
-            ->name('api.v1.products.index')
-        ;
+    Route::post('/api/v1/products', [ProductCreateController::class, '__invoke'])
+        ->name('api.v1.products.store')
+    ;
 
-        Route::get('/api/v1/products/{product}', [ProductViewController::class, '__invoke'])
-            ->name('api.v1.products.show')
-        ;
+    $scanner = app(RouteScanner::class);
+    $endpoints = $scanner->scan();
 
-        Route::post('/api/v1/products', [ProductCreateController::class, '__invoke'])
-            ->name('api.v1.products.store')
-        ;
+    $builder = new DocumentBuilder(
+        title: 'Test API',
+        version: '1.0.0',
+        description: 'A test API',
+        servers: [['url' => 'https://api.example.com']],
+        securitySchemes: [
+            'bearerAuth' => ['type' => 'http', 'scheme' => 'bearer'],
+        ],
+        security: [['bearerAuth' => []]],
+    );
 
-        $scanner = app(RouteScanner::class);
-        $endpoints = $scanner->scan();
+    $this->document = $builder->build($endpoints);
+});
 
-        $builder = new DocumentBuilder(
-            title: 'Test API',
-            version: '1.0.0',
-            description: 'A test API',
-            servers: [['url' => 'https://api.example.com']],
-            securitySchemes: [
-                'bearerAuth' => ['type' => 'http', 'scheme' => 'bearer'],
-            ],
-            security: [['bearerAuth' => []]],
-        );
+it('generates a valid OpenAPI 3.1 document', function () {
+    expect($this->document['openapi'])->toBe('3.1.0');
+    expect($this->document['info']['title'])->toBe('Test API');
+    expect($this->document['info']['version'])->toBe('1.0.0');
+    expect($this->document['info']['description'])->toBe('A test API');
+});
 
-        $this->document = $builder->build($endpoints);
-    }
+it('includes servers', function () {
+    expect($this->document['servers'][0]['url'])->toBe('https://api.example.com');
+});
 
-    #[Test]
-    #[TestDox('it generates a valid OpenAPI 3.1 document')]
-    public function it_generates_valid_document(): void
-    {
-        $this->assertSame('3.1.0', $this->document['openapi']);
-        $this->assertSame('Test API', $this->document['info']['title']);
-        $this->assertSame('1.0.0', $this->document['info']['version']);
-        $this->assertSame('A test API', $this->document['info']['description']);
-    }
+it('includes security schemes', function () {
+    expect($this->document['components']['securitySchemes'])->toHaveKey('bearerAuth');
+    expect($this->document['components']['securitySchemes']['bearerAuth']['type'])->toBe('http');
+    expect($this->document['security'])->toBe([['bearerAuth' => []]]);
+});
 
-    #[Test]
-    #[TestDox('it includes servers')]
-    public function it_includes_servers(): void
-    {
-        $this->assertSame('https://api.example.com', $this->document['servers'][0]['url']);
-    }
+it('includes top-level tags', function () {
+    $tagNames = array_column($this->document['tags'], 'name');
 
-    #[Test]
-    #[TestDox('it includes security schemes')]
-    public function it_includes_security(): void
-    {
-        $this->assertArrayHasKey('bearerAuth', $this->document['components']['securitySchemes']);
-        $this->assertSame('http', $this->document['components']['securitySchemes']['bearerAuth']['type']);
-        $this->assertSame([['bearerAuth' => []]], $this->document['security']);
-    }
+    expect($tagNames)->toContain('Products');
+});
 
-    #[Test]
-    #[TestDox('it includes top-level tags')]
-    public function it_includes_tags(): void
-    {
-        $tagNames = array_column($this->document['tags'], 'name');
+it('generates the Product schema with attributes', function () {
+    $schema = $this->document['components']['schemas']['Product'];
 
-        $this->assertContains('Products', $tagNames);
-    }
+    expect($schema['type'])->toBe('object');
+    expect($schema['required'])->toContain('type');
+    expect($schema['required'])->toContain('id');
+    expect($schema['properties']['type']['example'])->toBe('products');
 
-    #[Test]
-    #[TestDox('it generates the Product schema with attributes')]
-    public function it_generates_product_schema(): void
-    {
-        $schema = $this->document['components']['schemas']['Product'];
+    $attributes = $schema['properties']['attributes'];
+    expect($attributes['properties']['name']['type'])->toBe('string');
+    expect($attributes['properties']['code']['type'])->toBe('string');
+    expect($attributes['properties']['price_in_cents']['type'])->toBe('integer');
+    expect($attributes['properties']['featured']['type'])->toBe('boolean');
+    expect($attributes['properties']['status']['enum'])->toBe(['active', 'inactive']);
+});
 
-        $this->assertSame('object', $schema['type']);
-        $this->assertContains('type', $schema['required']);
-        $this->assertContains('id', $schema['required']);
-        $this->assertSame('products', $schema['properties']['type']['example']);
+it('generates relationship schemas', function () {
+    $schema = $this->document['components']['schemas']['Product'];
+    $relationships = $schema['properties']['relationships'];
 
-        $attributes = $schema['properties']['attributes'];
-        $this->assertSame('string', $attributes['properties']['name']['type']);
-        $this->assertSame('string', $attributes['properties']['code']['type']);
-        $this->assertSame('integer', $attributes['properties']['price_in_cents']['type']);
-        $this->assertSame('boolean', $attributes['properties']['featured']['type']);
-        $this->assertSame(['active', 'inactive'], $attributes['properties']['status']['enum']);
-    }
+    expect($relationships['properties'])->toHaveKey('category');
+    expect($relationships['properties'])->toHaveKey('tags');
+});
 
-    #[Test]
-    #[TestDox('it generates relationship schemas')]
-    public function it_generates_relationships(): void
-    {
-        $schema = $this->document['components']['schemas']['Product'];
-        $relationships = $schema['properties']['relationships'];
+it('generates list endpoint path with query params', function () {
+    $path = $this->document['paths']['/api/v1/products']['get'];
 
-        $this->assertArrayHasKey('category', $relationships['properties']);
-        $this->assertArrayHasKey('tags', $relationships['properties']);
-    }
+    expect($path['operationId'])->toBe('api.v1.products.index');
+    expect($path['tags'])->toContain('Products');
 
-    #[Test]
-    #[TestDox('it generates list endpoint path with query params')]
-    public function it_generates_list_path(): void
-    {
-        $path = $this->document['paths']['/api/v1/products']['get'];
+    $paramNames = array_column($path['parameters'], 'name');
+    expect($paramNames)->toContain('filter[name]');
+    expect($paramNames)->toContain('filter[status]');
+    expect($paramNames)->toContain('sort');
+    expect($paramNames)->toContain('include');
+    expect($paramNames)->toContain('page[number]');
+    expect($paramNames)->toContain('page[size]');
+    expect($paramNames)->toContain('page[cursor]');
 
-        $this->assertSame('api.v1.products.index', $path['operationId']);
-        $this->assertContains('Products', $path['tags']);
+    expect($path['responses'])->toHaveKey('200');
+    expect($path['responses'])->toHaveKey('401');
+});
 
-        $paramNames = array_column($path['parameters'], 'name');
-        $this->assertContains('filter[name]', $paramNames);
-        $this->assertContains('filter[status]', $paramNames);
-        $this->assertContains('sort', $paramNames);
-        $this->assertContains('include', $paramNames);
-        $this->assertContains('page[number]', $paramNames);
-        $this->assertContains('page[size]', $paramNames);
-        $this->assertContains('page[cursor]', $paramNames);
+it('generates single endpoint path', function () {
+    $pathItem = $this->document['paths']['/api/v1/products/{product}'];
+    $path = $pathItem['get'];
 
-        $this->assertArrayHasKey('200', $path['responses']);
-        $this->assertArrayHasKey('401', $path['responses']);
-    }
+    expect($path['operationId'])->toBe('api.v1.products.show');
 
-    #[Test]
-    #[TestDox('it generates single endpoint path')]
-    public function it_generates_single_path(): void
-    {
-        $pathItem = $this->document['paths']['/api/v1/products/{product}'];
-        $path = $pathItem['get'];
+    expect($path['responses'])->toHaveKey('200');
+    expect($path['responses'])->toHaveKey('404');
+    expect($path['responses'])->toHaveKey('401');
 
-        $this->assertSame('api.v1.products.show', $path['operationId']);
+    expect($pathItem['parameters'][0]['name'])->toBe('product');
+    expect($pathItem['parameters'][0]['in'])->toBe('path');
+    expect($pathItem['parameters'][0]['required'])->toBeTrue();
+});
 
-        $this->assertArrayHasKey('200', $path['responses']);
-        $this->assertArrayHasKey('404', $path['responses']);
-        $this->assertArrayHasKey('401', $path['responses']);
+it('generates POST endpoint with 201 response', function () {
+    $path = $this->document['paths']['/api/v1/products']['post'];
 
-        // Path parameter
-        $this->assertSame('product', $pathItem['parameters'][0]['name']);
-        $this->assertSame('path', $pathItem['parameters'][0]['in']);
-        $this->assertTrue($pathItem['parameters'][0]['required']);
-    }
+    expect($path['operationId'])->toBe('api.v1.products.store');
+    expect($path['responses'])->toHaveKey('201');
+    expect($path['responses'])->toHaveKey('422');
+});
 
-    #[Test]
-    #[TestDox('it generates POST endpoint with 201 response')]
-    public function it_generates_post_path(): void
-    {
-        $path = $this->document['paths']['/api/v1/products']['post'];
+it('uses shared error response refs', function () {
+    $path = $this->document['paths']['/api/v1/products']['get'];
 
-        $this->assertSame('api.v1.products.store', $path['operationId']);
-        $this->assertArrayHasKey('201', $path['responses']);
-        $this->assertArrayHasKey('422', $path['responses']);
-    }
+    expect($path['responses']['401']['$ref'])->toBe('#/components/responses/UnauthorizedException');
 
-    #[Test]
-    #[TestDox('it uses shared error response refs')]
-    public function it_uses_shared_error_refs(): void
-    {
-        $path = $this->document['paths']['/api/v1/products']['get'];
+    expect($this->document['components']['responses'])->toHaveKey('UnauthorizedException');
+    expect($this->document['components']['responses'])->toHaveKey('NotFoundHttpException');
+    expect($this->document['components']['responses'])->toHaveKey('ValidationException');
+});
 
-        $this->assertSame(
-            '#/components/responses/UnauthorizedException',
-            $path['responses']['401']['$ref'],
-        );
+it('generates collection and single response schemas', function () {
+    $schemas = $this->document['components']['schemas'];
 
-        $this->assertArrayHasKey('UnauthorizedException', $this->document['components']['responses']);
-        $this->assertArrayHasKey('NotFoundHttpException', $this->document['components']['responses']);
-        $this->assertArrayHasKey('ValidationException', $this->document['components']['responses']);
-    }
+    expect($schemas)->toHaveKey('Product');
+    expect($schemas)->toHaveKey('ProductCollection');
+    expect($schemas)->toHaveKey('ProductResponse');
+    expect($schemas)->toHaveKey('JsonApiError');
 
-    #[Test]
-    #[TestDox('it generates collection and single response schemas')]
-    public function it_generates_response_schemas(): void
-    {
-        $schemas = $this->document['components']['schemas'];
+    expect($schemas['ProductCollection']['properties']['data']['type'])->toBe('array');
+    expect($schemas['ProductCollection']['properties']['data']['items']['$ref'])->toBe('#/components/schemas/Product');
 
-        $this->assertArrayHasKey('Product', $schemas);
-        $this->assertArrayHasKey('ProductCollection', $schemas);
-        $this->assertArrayHasKey('ProductResponse', $schemas);
-        $this->assertArrayHasKey('JsonApiError', $schemas);
+    expect($schemas['ProductResponse']['properties']['data']['$ref'])->toBe('#/components/schemas/Product');
+});
 
-        // Collection wraps in array
-        $this->assertSame('array', $schemas['ProductCollection']['properties']['data']['type']);
-        $this->assertSame('#/components/schemas/Product', $schemas['ProductCollection']['properties']['data']['items']['$ref']);
+it('generates valid JSON output', function () {
+    $json = json_encode($this->document, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
-        // Single wraps in data
-        $this->assertSame('#/components/schemas/Product', $schemas['ProductResponse']['properties']['data']['$ref']);
-    }
+    expect($json)->not->toBeFalse();
+    $this->assertJson($json);
 
-    #[Test]
-    #[TestDox('it generates valid JSON output')]
-    public function it_generates_valid_json(): void
-    {
-        $json = json_encode($this->document, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-
-        $this->assertNotFalse($json);
-        $this->assertJson($json);
-
-        $decoded = json_decode($json, true);
-        $this->assertSame('3.1.0', $decoded['openapi']);
-    }
-}
-
-final class ProductListController
-{
-    public function __invoke(Request $request, Response $response): JsonResponse
-    {
-        $products = QueryBuilder::for(Product::class, $request)
-            ->fromResource(ProductResource::class)
-            ->paginate()
-        ;
-
-        return $response->success($products, ProductResource::class)->respond();
-    }
-}
-
-final class ProductViewController
-{
-    public function __invoke(Product $product, Response $response): JsonResponse
-    {
-        return $response->success($product, ProductResource::class)->respond();
-    }
-}
-
-final class ProductCreateController
-{
-    public function __invoke(Request $request, Response $response): JsonResponse
-    {
-        $product = Product::create($request->all());
-
-        return $response->success($product, ProductResource::class)->respond(201);
-    }
-}
-
-final class ProductDeleteController
-{
-    public function __invoke(Product $product, Response $response): JsonResponse
-    {
-        $product->delete();
-
-        return $response->success()->respond(204);
-    }
-}
+    $decoded = json_decode($json, true);
+    expect($decoded['openapi'])->toBe('3.1.0');
+});

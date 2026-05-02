@@ -4,144 +4,105 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Tests\Feature\Console;
 
-use BlueBeetle\ApiToolkit\Tests\TestCase;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\TestDox;
+beforeEach(function () {
+    $this->resourcePath = app_path('Http/Resources');
+});
 
-final class MakeResourceCommandTest extends TestCase
-{
-    private string $resourcePath;
+afterEach(function () {
+    $files = glob($this->resourcePath.'/*.php');
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->resourcePath = app_path('Http/Resources');
+    foreach ($files as $file) {
+        unlink($file);
     }
 
-    protected function tearDown(): void
-    {
-        $files = glob($this->resourcePath.'/*.php');
-
-        foreach ($files as $file) {
-            unlink($file);
-        }
-
-        if (is_dir($this->resourcePath)) {
-            rmdir($this->resourcePath);
-        }
-
-        $parentDir = app_path('Http');
-
-        if (is_dir($parentDir) && count(glob($parentDir.'/*')) === 0) {
-            rmdir($parentDir);
-        }
-
-        parent::tearDown();
+    if (is_dir($this->resourcePath)) {
+        rmdir($this->resourcePath);
     }
 
-    #[Test]
-    #[TestDox('it creates a resource with a model')]
-    public function it_creates_resource_with_model(): void
-    {
-        $this->artisan('api-toolkit:make-resource', ['name' => 'Product'])
-            ->assertSuccessful()
-        ;
+    $parentDir = app_path('Http');
 
-        $this->assertFileExists($this->resourcePath.'/ProductResource.php');
-
-        $content = file_get_contents($this->resourcePath.'/ProductResource.php');
-        $this->assertStringContainsString('class ProductResource extends Resource', $content);
-        $this->assertStringContainsString('App\Models\Product', $content);
-        $this->assertStringContainsString('Product::class', $content);
+    if (is_dir($parentDir) && count(glob($parentDir.'/*')) === 0) {
+        rmdir($parentDir);
     }
+});
 
-    #[Test]
-    #[TestDox('it creates a resource with explicit model option')]
-    public function it_creates_with_explicit_model(): void
-    {
-        $this->artisan('api-toolkit:make-resource', [
-            'name' => 'Item',
-            '--model' => 'App\Domain\Models\Item',
-        ])->assertSuccessful();
+it('creates a resource with a model', function () {
+    $this->artisan('api-toolkit:make-resource', ['name' => 'Product'])
+        ->assertSuccessful()
+    ;
 
-        $content = file_get_contents($this->resourcePath.'/ItemResource.php');
-        $this->assertStringContainsString('App\Domain\Models\Item', $content);
-    }
+    expect($this->resourcePath.'/ProductResource.php')->toBeFile();
 
-    #[Test]
-    #[TestDox('it creates a plain resource without a model')]
-    public function it_creates_plain_resource(): void
-    {
-        $this->artisan('api-toolkit:make-resource', [
-            'name' => 'Timestamp',
-            '--plain' => true,
-        ])->assertSuccessful();
+    $content = file_get_contents($this->resourcePath.'/ProductResource.php');
+    expect($content)->toContain('class ProductResource extends Resource');
+    expect($content)->toContain('App\Models\Product');
+    expect($content)->toContain('Product::class');
+});
 
-        $content = file_get_contents($this->resourcePath.'/TimestampResource.php');
-        $this->assertStringContainsString('class TimestampResource extends Resource', $content);
-        $this->assertStringContainsString("type = 'timestamp'", $content);
-        $this->assertStringNotContainsString('$model =', $content);
-    }
+it('creates a resource with explicit model option', function () {
+    $this->artisan('api-toolkit:make-resource', [
+        'name' => 'Item',
+        '--model' => 'App\Domain\Models\Item',
+    ])->assertSuccessful();
 
-    #[Test]
-    #[TestDox('it appends Resource suffix when not provided')]
-    public function it_appends_resource_suffix(): void
-    {
-        $this->artisan('api-toolkit:make-resource', ['name' => 'Category'])
-            ->assertSuccessful()
-        ;
+    $content = file_get_contents($this->resourcePath.'/ItemResource.php');
+    expect($content)->toContain('App\Domain\Models\Item');
+});
 
-        $this->assertFileExists($this->resourcePath.'/CategoryResource.php');
-    }
+it('creates a plain resource without a model', function () {
+    $this->artisan('api-toolkit:make-resource', [
+        'name' => 'Timestamp',
+        '--plain' => true,
+    ])->assertSuccessful();
 
-    #[Test]
-    #[TestDox('it does not duplicate Resource suffix')]
-    public function it_does_not_duplicate_suffix(): void
-    {
-        $this->artisan('api-toolkit:make-resource', ['name' => 'CategoryResource'])
-            ->assertSuccessful()
-        ;
+    $content = file_get_contents($this->resourcePath.'/TimestampResource.php');
+    expect($content)->toContain('class TimestampResource extends Resource');
+    expect($content)->toContain("type = 'timestamp'");
+    expect($content)->not->toContain('$model =');
+});
 
-        $this->assertFileExists($this->resourcePath.'/CategoryResource.php');
-        $this->assertFileDoesNotExist($this->resourcePath.'/CategoryResourceResource.php');
-    }
+it('appends Resource suffix when not provided', function () {
+    $this->artisan('api-toolkit:make-resource', ['name' => 'Category'])
+        ->assertSuccessful()
+    ;
 
-    #[Test]
-    #[TestDox('it fails when resource already exists')]
-    public function it_fails_when_resource_exists(): void
-    {
-        $this->artisan('api-toolkit:make-resource', ['name' => 'Product'])
-            ->assertSuccessful()
-        ;
+    expect($this->resourcePath.'/CategoryResource.php')->toBeFile();
+});
 
-        $this->artisan('api-toolkit:make-resource', ['name' => 'Product'])
-            ->assertFailed()
-        ;
-    }
+it('does not duplicate Resource suffix', function () {
+    $this->artisan('api-toolkit:make-resource', ['name' => 'CategoryResource'])
+        ->assertSuccessful()
+    ;
 
-    #[Test]
-    #[TestDox('it derives type name for plain resources')]
-    public function it_derives_type_name(): void
-    {
-        $this->artisan('api-toolkit:make-resource', [
-            'name' => 'UserProfile',
-            '--plain' => true,
-        ])->assertSuccessful();
+    expect($this->resourcePath.'/CategoryResource.php')->toBeFile();
+    expect($this->resourcePath.'/CategoryResourceResource.php')->not->toBeFile();
+});
 
-        $content = file_get_contents($this->resourcePath.'/UserProfileResource.php');
-        $this->assertStringContainsString("type = 'user-profile'", $content);
-    }
+it('fails when resource already exists', function () {
+    $this->artisan('api-toolkit:make-resource', ['name' => 'Product'])
+        ->assertSuccessful()
+    ;
 
-    #[Test]
-    #[TestDox('it uses camelCase variable name for model')]
-    public function it_uses_camel_case_variable(): void
-    {
-        $this->artisan('api-toolkit:make-resource', ['name' => 'ProductCategory'])
-            ->assertSuccessful()
-        ;
+    $this->artisan('api-toolkit:make-resource', ['name' => 'Product'])
+        ->assertFailed()
+    ;
+});
 
-        $content = file_get_contents($this->resourcePath.'/ProductCategoryResource.php');
-        $this->assertStringContainsString('$productCategory', $content);
-    }
-}
+it('derives type name for plain resources', function () {
+    $this->artisan('api-toolkit:make-resource', [
+        'name' => 'UserProfile',
+        '--plain' => true,
+    ])->assertSuccessful();
+
+    $content = file_get_contents($this->resourcePath.'/UserProfileResource.php');
+    expect($content)->toContain("type = 'user-profile'");
+});
+
+it('uses camelCase variable name for model', function () {
+    $this->artisan('api-toolkit:make-resource', ['name' => 'ProductCategory'])
+        ->assertSuccessful()
+    ;
+
+    $content = file_get_contents($this->resourcePath.'/ProductCategoryResource.php');
+    expect($content)->toContain('$productCategory');
+});

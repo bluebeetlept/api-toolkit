@@ -5,156 +5,111 @@ declare(strict_types = 1);
 namespace BlueBeetle\ApiToolkit\Tests\Feature\Parsers;
 
 use BlueBeetle\ApiToolkit\Parsers\PageParser;
-use BlueBeetle\ApiToolkit\Tests\TestCase;
 use Illuminate\Http\Request;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\TestDox;
 
-final class PageParserTest extends TestCase
-{
-    #[Test]
-    #[TestDox('it returns default size when no page param')]
-    public function it_returns_default_size(): void
-    {
-        $parser = new PageParser(defaultSize: 20);
+it('returns default size when no page param', function () {
+    $parser = new PageParser(defaultSize: 20);
 
-        $request = Request::create('/');
+    $request = Request::create('/');
 
-        $this->assertSame(20, $parser->getSize($request));
-    }
+    expect($parser->getSize($request))->toBe(20);
+});
 
-    #[Test]
-    #[TestDox('it parses page size from request')]
-    public function it_parses_size(): void
-    {
-        $parser = new PageParser();
+it('parses page size from request', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => ['size' => '40']]);
+    $request = Request::create('/', 'GET', ['page' => ['size' => '40']]);
 
-        $this->assertSame(40, $parser->getSize($request));
-    }
+    expect($parser->getSize($request))->toBe(40);
+});
 
-    #[Test]
-    #[TestDox('it clamps page size to max')]
-    public function it_clamps_to_max(): void
-    {
-        $parser = new PageParser(maxSize: 100);
+it('clamps page size to max', function () {
+    $parser = new PageParser(maxSize: 100);
 
-        $request = Request::create('/', 'GET', ['page' => ['size' => '500']]);
+    $request = Request::create('/', 'GET', ['page' => ['size' => '500']]);
 
-        $this->assertSame(100, $parser->getSize($request));
-    }
+    expect($parser->getSize($request))->toBe(100);
+});
 
-    #[Test]
-    #[TestDox('it clamps page size to minimum 1')]
-    public function it_clamps_to_min(): void
-    {
-        $parser = new PageParser();
+it('clamps page size to minimum 1', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => ['size' => '0']]);
+    $request = Request::create('/', 'GET', ['page' => ['size' => '0']]);
 
-        $this->assertSame(1, $parser->getSize($request));
-    }
+    expect($parser->getSize($request))->toBe(1);
+});
 
-    #[Test]
-    #[TestDox('it returns page number')]
-    public function it_returns_page_number(): void
-    {
-        $parser = new PageParser();
+it('returns page number', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => ['number' => '3']]);
+    $request = Request::create('/', 'GET', ['page' => ['number' => '3']]);
 
-        $this->assertSame(3, $parser->getNumber($request));
-    }
+    expect($parser->getNumber($request))->toBe(3);
+});
 
-    #[Test]
-    #[TestDox('it defaults to page 1')]
-    public function it_defaults_to_page_1(): void
-    {
-        $parser = new PageParser();
+it('defaults to page 1', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/');
+    $request = Request::create('/');
 
-        $this->assertSame(1, $parser->getNumber($request));
-    }
+    expect($parser->getNumber($request))->toBe(1);
+});
 
-    #[Test]
-    #[TestDox('it detects cursor pagination')]
-    public function it_detects_cursor(): void
-    {
-        $parser = new PageParser();
+it('detects cursor pagination', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => ['cursor' => 'eyJpZCI6MTB9']]);
+    $request = Request::create('/', 'GET', ['page' => ['cursor' => 'eyJpZCI6MTB9']]);
 
-        $this->assertTrue($parser->isCursor($request));
-        $this->assertSame('eyJpZCI6MTB9', $parser->getCursor($request));
-    }
+    expect($parser->isCursor($request))->toBeTrue();
+    expect($parser->getCursor($request))->toBe('eyJpZCI6MTB9');
+});
 
-    #[Test]
-    #[TestDox('it detects non-cursor pagination')]
-    public function it_detects_non_cursor(): void
-    {
-        $parser = new PageParser();
+it('detects non-cursor pagination', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => ['number' => '2']]);
+    $request = Request::create('/', 'GET', ['page' => ['number' => '2']]);
 
-        $this->assertFalse($parser->isCursor($request));
-        $this->assertNull($parser->getCursor($request));
-    }
+    expect($parser->isCursor($request))->toBeFalse();
+    expect($parser->getCursor($request))->toBeNull();
+});
 
-    #[Test]
-    #[TestDox('it returns null cursor when no page param')]
-    public function it_returns_null_cursor_without_param(): void
-    {
-        $parser = new PageParser();
+it('returns null cursor when no page param', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/');
+    $request = Request::create('/');
 
-        $this->assertFalse($parser->isCursor($request));
-        $this->assertNull($parser->getCursor($request));
-    }
+    expect($parser->isCursor($request))->toBeFalse();
+    expect($parser->getCursor($request))->toBeNull();
+});
 
-    #[Test]
-    #[TestDox('it handles non-array page param for isCursor')]
-    public function it_handles_non_array_page_for_is_cursor(): void
-    {
-        $parser = new PageParser();
+it('handles non-array page param for isCursor', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+    $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
 
-        $this->assertFalse($parser->isCursor($request));
-    }
+    expect($parser->isCursor($request))->toBeFalse();
+});
 
-    #[Test]
-    #[TestDox('it handles non-array page param for getSize')]
-    public function it_handles_non_array_page_for_size(): void
-    {
-        $parser = new PageParser(defaultSize: 25);
+it('handles non-array page param for getSize', function () {
+    $parser = new PageParser(defaultSize: 25);
 
-        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+    $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
 
-        $this->assertSame(25, $parser->getSize($request));
-    }
+    expect($parser->getSize($request))->toBe(25);
+});
 
-    #[Test]
-    #[TestDox('it handles non-array page param for getNumber')]
-    public function it_handles_non_array_page_for_number(): void
-    {
-        $parser = new PageParser();
+it('handles non-array page param for getNumber', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+    $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
 
-        $this->assertSame(1, $parser->getNumber($request));
-    }
+    expect($parser->getNumber($request))->toBe(1);
+});
 
-    #[Test]
-    #[TestDox('it handles non-array page param for getCursor')]
-    public function it_handles_non_array_page_for_cursor(): void
-    {
-        $parser = new PageParser();
+it('handles non-array page param for getCursor', function () {
+    $parser = new PageParser();
 
-        $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
+    $request = Request::create('/', 'GET', ['page' => 'not-an-array']);
 
-        $this->assertNull($parser->getCursor($request));
-    }
-}
+    expect($parser->getCursor($request))->toBeNull();
+});

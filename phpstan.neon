@@ -11,5 +11,4 @@ parameters:
     parallel:
         processTimeout: 300.0
 
-    ignoreErrors:
-        - '#Dynamic call to static method PHPUnit\\Framework\\.*#'
+    ignoreErrors: []
