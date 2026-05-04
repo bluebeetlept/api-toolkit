@@ -10,6 +10,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * @template TModel
@@ -226,7 +227,13 @@ class Resource
             return (string) $model->id;
         }
 
-        return '';
+        throw new RuntimeException(
+            sprintf(
+                'Unable to resolve ID for [%s] in resource [%s]. Define an id property or register a global resolver with Resource::resolveIdUsing().',
+                get_debug_type($model),
+                static::class,
+            ),
+        );
     }
 
     /**

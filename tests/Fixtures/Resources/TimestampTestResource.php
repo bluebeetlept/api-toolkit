@@ -10,6 +10,11 @@ class TimestampTestResource extends Resource
 {
     protected string $type = 'timestamps';
 
+    public function resolveId($model): string
+    {
+        return (string) $model->timestamp;
+    }
+
     public function attributes($date): array
     {
         return [
