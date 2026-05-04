@@ -7,6 +7,7 @@ namespace BlueBeetle\ApiToolkit\Tests\Feature\Resources;
 use BadMethodCallException;
 use BlueBeetle\ApiToolkit\Resources\Resource;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\Product;
+use RuntimeException;
 use stdClass;
 
 it('serializes a model to JSON:API resource object', function () {
@@ -317,6 +318,21 @@ it('resolves type from model instance table name', function () {
 
     expect($result['type'])->toBe('products');
 });
+
+it('throws when id cannot be resolved', function () {
+    $resource = new class() extends Resource {
+        protected string $type = 'items';
+
+        public function attributes($model): array
+        {
+            return [];
+        }
+    };
+
+    $model = new stdClass();
+
+    $resource->toArray($model);
+})->throws(RuntimeException::class, 'Unable to resolve ID');
 
 it('returns empty type when no model and no type set', function () {
     $resource = new class() extends Resource {
