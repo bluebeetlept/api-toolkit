@@ -47,7 +47,7 @@ final class ListController
 
 ## Documentation
 
-Full documentation is available in the `docs/` directory, powered by [Mintlify](https://mintlify.com).
+Full documentation is available at [bluebeetle.pt/open-source/docs/api-toolkit/v1](https://bluebeetle.pt/open-source/docs/api-toolkit/v1).
 
 ## Testing
 
