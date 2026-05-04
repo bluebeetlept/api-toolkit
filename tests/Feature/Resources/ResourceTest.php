@@ -410,3 +410,85 @@ it('returns empty type when no model and no type set', function () {
 
     expect($resource->resolveType())->toBe('');
 });
+
+it('filters attributes with sparse fieldsets from request', function () {
+    $resource = new class() extends Resource {
+        protected string $type = 'products';
+
+        public function attributes($model): array
+        {
+            return [
+                'name' => $model->name,
+                'price' => $model->price,
+                'sku' => $model->sku,
+            ];
+        }
+    };
+
+    $request = \Illuminate\Http\Request::create('/', 'GET', [
+        'fields' => ['products' => 'name,price'],
+    ]);
+
+    $model = new stdClass();
+    $model->id = '1';
+    $model->name = 'Widget';
+    $model->price = 29.99;
+    $model->sku = 'WGT-001';
+
+    $result = $resource->withRequest($request)->toArray($model);
+
+    expect($result['attributes'])->toBe(['name' => 'Widget', 'price' => 29.99]);
+    expect($result['attributes'])->not->toHaveKey('sku');
+});
+
+it('returns all attributes when no sparse fieldset is requested', function () {
+    $resource = new class() extends Resource {
+        protected string $type = 'products';
+
+        public function attributes($model): array
+        {
+            return [
+                'name' => $model->name,
+                'price' => $model->price,
+            ];
+        }
+    };
+
+    $request = \Illuminate\Http\Request::create('/');
+
+    $model = new stdClass();
+    $model->id = '1';
+    $model->name = 'Widget';
+    $model->price = 29.99;
+
+    $result = $resource->withRequest($request)->toArray($model);
+
+    expect($result['attributes'])->toBe(['name' => 'Widget', 'price' => 29.99]);
+});
+
+it('ignores sparse fieldsets for non-matching type', function () {
+    $resource = new class() extends Resource {
+        protected string $type = 'products';
+
+        public function attributes($model): array
+        {
+            return [
+                'name' => $model->name,
+                'price' => $model->price,
+            ];
+        }
+    };
+
+    $request = \Illuminate\Http\Request::create('/', 'GET', [
+        'fields' => ['categories' => 'name'],
+    ]);
+
+    $model = new stdClass();
+    $model->id = '1';
+    $model->name = 'Widget';
+    $model->price = 29.99;
+
+    $result = $resource->withRequest($request)->toArray($model);
+
+    expect($result['attributes'])->toBe(['name' => 'Widget', 'price' => 29.99]);
+});

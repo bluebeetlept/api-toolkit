@@ -46,3 +46,32 @@ it('provides error message', function () {
 
     expect($validator->errors()->first('size'))->toContain('15');
 });
+
+it('reads valid sizes from config when no sizes provided', function () {
+    $this->app['config']->set('api-toolkit.pagination.valid_sizes', [5, 15, 30]);
+
+    $validator = Validator::make(
+        ['size' => 15],
+        ['size' => [new ValidPageSize()]],
+    );
+
+    expect($validator->passes())->toBeTrue();
+
+    $validator = Validator::make(
+        ['size' => 20],
+        ['size' => [new ValidPageSize()]],
+    );
+
+    expect($validator->passes())->toBeFalse();
+});
+
+it('prefers explicit sizes over config', function () {
+    $this->app['config']->set('api-toolkit.pagination.valid_sizes', [5, 15, 30]);
+
+    $validator = Validator::make(
+        ['size' => 25],
+        ['size' => [new ValidPageSize([25, 50])]],
+    );
+
+    expect($validator->passes())->toBeTrue();
+});
