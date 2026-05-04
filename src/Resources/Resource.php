@@ -23,10 +23,14 @@ use Illuminate\Support\Str;
  */
 class Resource
 {
-    /** @var (Closure(mixed, Request|null): string)|null */
+    /**
+     * @var (Closure(mixed, Request|null): string)|null
+     */
     private static Closure | null $idResolver = null;
 
-    /** @var (Closure(mixed, Request|null): string)|null */
+    /**
+     * @var (Closure(mixed, Request|null): string)|null
+     */
     private static Closure | null $typeResolver = null;
 
     /**
@@ -215,15 +219,11 @@ class Resource
         }
 
         if ($model instanceof Model) {
-            return (string) ($model->public_id ?? $model->getKey());
+            return (string) $model->getKey();
         }
 
         if (is_object($model) && property_exists($model, 'id')) {
             return (string) $model->id;
-        }
-
-        if (is_object($model) && property_exists($model, 'public_id')) {
-            return (string) $model->public_id;
         }
 
         return '';

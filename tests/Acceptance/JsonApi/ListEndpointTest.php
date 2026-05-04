@@ -38,7 +38,7 @@ it('returns a valid JSON:API collection response', function () {
     ]);
 
     $response->assertJsonPath('data.0.type', 'products');
-    $response->assertJsonPath('data.0.id', 'p1');
+    $response->assertJsonPath('data.0.id', '1');
     $response->assertJsonPath('data.0.attributes.name', 'Widget');
     $response->assertJsonPath('data.0.attributes.code', 'W01');
 });
@@ -104,7 +104,7 @@ it('includes relationships when requested', function () {
     $response->assertStatus(200);
 
     $response->assertJsonPath('data.0.relationships.category.data.type', 'categories');
-    $response->assertJsonPath('data.0.relationships.category.data.id', 'c1');
+    $response->assertJsonPath('data.0.relationships.category.data.id', (string) $category->id);
 
     $response->assertJsonStructure([
         'included' => [
@@ -113,7 +113,7 @@ it('includes relationships when requested', function () {
     ]);
 
     $response->assertJsonPath('included.0.type', 'categories');
-    $response->assertJsonPath('included.0.id', 'c1');
+    $response->assertJsonPath('included.0.id', (string) $category->id);
     $response->assertJsonPath('included.0.attributes.name', 'Electronics');
 });
 

@@ -42,7 +42,7 @@ it('returns a valid JSON:API single resource response', function () {
     ]);
 
     $response->assertJsonPath('data.type', 'products');
-    $response->assertJsonPath('data.id', 'p1');
+    $response->assertJsonPath('data.id', (string) Product::where('public_id', 'p1')->first()->id);
     $response->assertJsonPath('data.attributes.name', 'Widget');
     $response->assertJsonPath('data.attributes.code', 'W01');
     $response->assertJsonPath('data.attributes.description', 'A fine widget');
@@ -59,7 +59,7 @@ it('includes loaded relationships in response', function () {
 
     $response->assertStatus(200);
     $response->assertJsonPath('data.relationships.category.data.type', 'categories');
-    $response->assertJsonPath('data.relationships.category.data.id', 'c1');
+    $response->assertJsonPath('data.relationships.category.data.id', (string) $category->id);
 });
 
 it('includes self link', function () {

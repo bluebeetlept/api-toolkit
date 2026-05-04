@@ -19,20 +19,28 @@ use Illuminate\Http\Request;
 
 final class QueryBuilder
 {
-    /** @var class-string<resource>|null */
+    /**
+     * @var class-string<resource>|null
+     */
     private string | null $resourceClass = null;
 
     private Resource | null $resourceInstance = null;
 
-    /** @var array<string, class-string<Filter>|Filter>|null */
+    /**
+     * @var array<string, class-string<Filter>|Filter>|null
+     */
     private array | null $filters = null;
 
-    /** @var list<string>|null */
+    /**
+     * @var list<string>|null
+     */
     private array | null $sorts = null;
 
     private string | null $defaultSort = null;
 
-    /** @var list<string>|null */
+    /**
+     * @var list<string>|null
+     */
     private array | null $includes = null;
 
     private bool $defaultSortOverridden = false;
