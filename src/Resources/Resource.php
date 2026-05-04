@@ -54,6 +54,13 @@ class Resource
     protected Request | null $request = null;
 
     /**
+     * Cached parsed sparse fieldsets for the current request.
+     *
+     * @var array<string, list<string>>|null
+     */
+    private array | null $parsedFields = null;
+
+    /**
      * Register a global callback to resolve the resource ID.
      *
      * @param Closure(mixed, Request|null): string $callback
@@ -90,6 +97,7 @@ class Resource
     public function withRequest(Request | null $request): static
     {
         $this->request = $request;
+        $this->parsedFields = null;
 
         return $this;
     }
@@ -113,9 +121,7 @@ class Resource
         $attributes = $this->attributes($model);
 
         if ($this->request !== null) {
-            $fieldParser = new FieldParser();
-            $fields = $fieldParser->parse($this->request);
-            $attributes = $fieldParser->filter($attributes, $fields[$type] ?? null);
+            $attributes = $this->applySparseFieldsets($type, $attributes);
         }
 
         return [
@@ -282,6 +288,20 @@ class Resource
         }
 
         return [];
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     *
+     * @return array<string, mixed>
+     */
+    private function applySparseFieldsets(string $type, array $attributes): array
+    {
+        if ($this->parsedFields === null) {
+            $this->parsedFields = (new FieldParser())->parse($this->request);
+        }
+
+        return (new FieldParser())->filter($attributes, $this->parsedFields[$type] ?? null);
     }
 
     /**

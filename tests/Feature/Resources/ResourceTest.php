@@ -466,6 +466,45 @@ it('returns all attributes when no sparse fieldset is requested', function () {
     expect($result['attributes'])->toBe(['name' => 'Widget', 'price' => 29.99]);
 });
 
+it('caches sparse fieldsets across multiple toArray calls', function () {
+    $resource = new class() extends Resource {
+        protected string $type = 'products';
+
+        public function attributes($model): array
+        {
+            return [
+                'name' => $model->name,
+                'price' => $model->price,
+                'sku' => $model->sku,
+            ];
+        }
+    };
+
+    $request = \Illuminate\Http\Request::create('/', 'GET', [
+        'fields' => ['products' => 'name'],
+    ]);
+
+    $resource->withRequest($request);
+
+    $model1 = new stdClass();
+    $model1->id = '1';
+    $model1->name = 'Widget';
+    $model1->price = 10;
+    $model1->sku = 'W01';
+
+    $model2 = new stdClass();
+    $model2->id = '2';
+    $model2->name = 'Gadget';
+    $model2->price = 20;
+    $model2->sku = 'G01';
+
+    $result1 = $resource->toArray($model1);
+    $result2 = $resource->toArray($model2);
+
+    expect($result1['attributes'])->toBe(['name' => 'Widget']);
+    expect($result2['attributes'])->toBe(['name' => 'Gadget']);
+});
+
 it('ignores sparse fieldsets for non-matching type', function () {
     $resource = new class() extends Resource {
         protected string $type = 'products';

@@ -4,8 +4,8 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Http;
 
-use BlueBeetle\ApiToolkit\Resources\Resource;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 final readonly class Response
 {
@@ -29,6 +29,15 @@ final readonly class Response
         }
 
         return $response;
+    }
+
+    public function noContent(): SymfonyResponse
+    {
+        return new SymfonyResponse(
+            content: '',
+            status: 204,
+            headers: ['Content-Type' => 'application/vnd.api+json'],
+        );
     }
 
     public function error(string $title, string | null $detail = null, int $status = 400): ErrorResponse
