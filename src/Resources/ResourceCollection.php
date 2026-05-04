@@ -144,13 +144,12 @@ final readonly class ResourceCollection
             ];
         }
 
-        if ($this->data instanceof CursorPaginator) {
-            return [
-                'prev' => $this->data->previousPageUrl(),
-                'next' => $this->data->nextPageUrl(),
-            ];
-        }
+        /** @var CursorPaginator $cursor */
+        $cursor = $this->data;
 
-        return [];
+        return [
+            'prev' => $cursor->previousPageUrl(),
+            'next' => $cursor->nextPageUrl(),
+        ];
     }
 }

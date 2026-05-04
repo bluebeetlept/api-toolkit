@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace BlueBeetle\ApiToolkit\Resources;
 
 use BadMethodCallException;
+use BlueBeetle\ApiToolkit\Parsers\FieldParser;
 use BlueBeetle\ApiToolkit\Parsers\Filters\Filter;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -108,10 +109,19 @@ class Resource
             );
         }
 
+        $type = $this->resolveType($model);
+        $attributes = $this->attributes($model);
+
+        if ($this->request !== null) {
+            $fieldParser = new FieldParser();
+            $fields = $fieldParser->parse($this->request);
+            $attributes = $fieldParser->filter($attributes, $fields[$type] ?? null);
+        }
+
         return [
-            'type' => $this->resolveType($model),
+            'type' => $type,
             'id' => $this->resolveId($model),
-            'attributes' => $this->attributes($model),
+            'attributes' => $attributes,
             'relationships' => $this->resolveRelationships($model),
             'links' => $this->resolveLinks($model),
             'meta' => $this->resolveMeta($model),
