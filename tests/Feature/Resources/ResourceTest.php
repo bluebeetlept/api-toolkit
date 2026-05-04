@@ -319,6 +319,72 @@ it('resolves type from model instance table name', function () {
     expect($result['type'])->toBe('products');
 });
 
+it('resolves id from eloquent model primary key', function () {
+    $resource = new class() extends Resource {
+        public function attributes($model): array
+        {
+            return [];
+        }
+    };
+
+    $model = new Product();
+    $model->id = 42;
+
+    $result = $resource->toArray($model);
+
+    expect($result['id'])->toBe('42');
+});
+
+it('uses resource-level resolveId override', function () {
+    $resource = new class() extends Resource {
+        protected string $type = 'items';
+
+        public function resolveId($model): string
+        {
+            return 'custom-'.$model->slug;
+        }
+
+        public function attributes($model): array
+        {
+            return [];
+        }
+    };
+
+    $model = new stdClass();
+    $model->slug = 'widget';
+
+    $result = $resource->toArray($model);
+
+    expect($result['id'])->toBe('custom-widget');
+});
+
+it('gives precedence to resource-level override over global resolver', function () {
+    Resource::resolveIdUsing(fn ($model) => 'global-'.$model->id);
+
+    $resource = new class() extends Resource {
+        protected string $type = 'items';
+
+        public function resolveId($model): string
+        {
+            return 'resource-'.$model->id;
+        }
+
+        public function attributes($model): array
+        {
+            return [];
+        }
+    };
+
+    $model = new stdClass();
+    $model->id = '1';
+
+    $result = $resource->toArray($model);
+
+    expect($result['id'])->toBe('resource-1');
+
+    Resource::resetResolvers();
+});
+
 it('throws when id cannot be resolved', function () {
     $resource = new class() extends Resource {
         protected string $type = 'items';
