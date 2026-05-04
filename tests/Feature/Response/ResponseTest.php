@@ -220,3 +220,13 @@ it('omits optional fields when not set in error response', function () {
     expect($error)->not->toHaveKey('source');
     expect($error)->not->toHaveKey('meta');
 });
+
+it('creates a 204 no content response with empty body', function () {
+    $response = new Response();
+
+    $result = $response->noContent();
+
+    expect($result->getStatusCode())->toBe(204);
+    expect($result->getContent())->toBe('');
+    expect($result->headers->get('Content-Type'))->toBe('application/vnd.api+json');
+});
