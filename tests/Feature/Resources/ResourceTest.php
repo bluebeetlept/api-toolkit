@@ -49,7 +49,7 @@ it('returns null when model is null', function () {
     expect($resource->toArray(null))->toBeNull();
 });
 
-it('resolves id from public_id when available', function () {
+it('resolves id from id property on plain objects', function () {
     $resource = new class() extends Resource {
         protected string $type = 'items';
 
@@ -60,11 +60,11 @@ it('resolves id from public_id when available', function () {
     };
 
     $model = new stdClass();
-    $model->public_id = 'pub-456';
+    $model->id = 'obj-456';
 
     $result = $resource->toArray($model);
 
-    expect($result['id'])->toBe('pub-456');
+    expect($result['id'])->toBe('obj-456');
 });
 
 it('uses the static make method for quick transformation', function () {
