@@ -47,7 +47,7 @@ final class ListController
 
 ## Documentation
 
-Full documentation is available at [bluebeetle.pt/open-source/docs/api-toolkit/v1](https://bluebeetle.pt/open-source/docs/api-toolkit/v1).
+Full documentation is available at [bluebeetle.pt/open-source/docs/api-toolkit](https://bluebeetle.pt/open-source/docs/api-toolkit).
 
 ## Testing
 
