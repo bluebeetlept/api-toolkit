@@ -10,7 +10,7 @@
         "rest",
         "toolkit"
     ],
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": "^8.4",
         "bluebeetle/idempotency-middleware": "^1.0",
