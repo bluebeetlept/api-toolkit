@@ -169,7 +169,7 @@ it('returns a SuccessResponse from paginate', function () {
     expect($array)->toHaveKey('links');
 });
 
-it('returns a SuccessResponse from cursorPaginate', function () {
+it('returns a SuccessResponse from cursor', function () {
     Product::create([
         'public_id' => 'prod-1',
         'name' => 'Widget',
@@ -182,7 +182,7 @@ it('returns a SuccessResponse from cursorPaginate', function () {
 
     $result = QueryBuilder::for(Product::class, $request)
         ->fromResource(ProductResource::class)
-        ->cursorPaginate()
+        ->cursor()
     ;
 
     expect($result)->toBeInstanceOf(SuccessResponse::class);

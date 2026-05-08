@@ -117,7 +117,7 @@ final class QueryBuilder
         return $this->toSuccessResponse($data);
     }
 
-    public function cursorPaginate(): SuccessResponse
+    public function cursor(): SuccessResponse
     {
         $this->applyAll();
 

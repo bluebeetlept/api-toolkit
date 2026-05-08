@@ -169,12 +169,12 @@ final readonly class RouteScanner
     }
 
     /**
-     * Determine if this endpoint returns a collection (uses paginate/cursorPaginate/get on QueryBuilder).
+     * Determine if this endpoint returns a collection (uses paginate/cursor/get on QueryBuilder).
      */
     private function isListEndpoint(string $source): bool
     {
         return str_contains($source, '->paginate(')
-            || str_contains($source, '->cursorPaginate(')
+            || str_contains($source, '->cursor(')
             || str_contains($source, 'QueryBuilder::for(');
     }
 

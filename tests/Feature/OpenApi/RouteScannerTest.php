@@ -101,7 +101,7 @@ it('returns empty array when no toolkit routes exist', function () {
     expect($endpoints)->toBe([]);
 });
 
-it('detects cursorPaginate as list endpoint', function () {
+it('detects cursor as list endpoint', function () {
     Route::get('/api/v1/products', [ScannerStubCursorController::class, '__invoke']);
 
     $scanner = app(RouteScanner::class);
