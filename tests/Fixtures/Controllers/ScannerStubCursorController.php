@@ -17,7 +17,7 @@ final class ScannerStubCursorController
     {
         return QueryBuilder::for(Product::class, $request)
             ->fromResource(ProductResource::class)
-            ->cursorPaginate()
+            ->cursor()
             ->respond()
         ;
     }
