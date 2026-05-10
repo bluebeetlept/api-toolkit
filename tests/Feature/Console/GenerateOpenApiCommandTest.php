@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Route;
 
 afterEach(function () {
     $files = [
-        base_path('openapi.json'),
-        base_path('custom-output.json'),
+        public_path('openapi.json'),
+        public_path('custom-output.json'),
     ];
 
     foreach ($files as $file) {
@@ -27,7 +27,7 @@ it('warns when no endpoints are found', function () {
         ->assertSuccessful()
     ;
 
-    expect(base_path('openapi.json'))->not->toBeFile();
+    expect(public_path('openapi.json'))->not->toBeFile();
 });
 
 it('generates openapi.json with default output path', function () {
@@ -35,27 +35,29 @@ it('generates openapi.json with default output path', function () {
 
     $this->artisan('api-toolkit:openapi')
         ->expectsOutputToContain('endpoint(s)')
-        ->expectsOutputToContain('OpenAPI spec written to openapi.json')
+        ->expectsOutputToContain('OpenAPI spec written to')
         ->assertSuccessful()
     ;
 
-    expect(base_path('openapi.json'))->toBeFile();
+    expect(public_path('openapi.json'))->toBeFile();
 
-    $content = json_decode(file_get_contents(base_path('openapi.json')), true);
+    $content = json_decode(file_get_contents(public_path('openapi.json')), true);
     expect($content['openapi'])->toBe('3.1.0');
 });
 
 it('generates to custom output path', function () {
     registerRoutes();
 
-    $this->artisan('api-toolkit:openapi', ['--output' => 'custom-output.json'])
-        ->expectsOutputToContain('OpenAPI spec written to custom-output.json')
+    $customPath = public_path('custom-output.json');
+
+    $this->artisan('api-toolkit:openapi', ['--output' => $customPath])
+        ->expectsOutputToContain('OpenAPI spec written to')
         ->assertSuccessful()
     ;
 
-    expect(base_path('custom-output.json'))->toBeFile();
+    expect($customPath)->toBeFile();
 
-    $content = json_decode(file_get_contents(base_path('custom-output.json')), true);
+    $content = json_decode(file_get_contents($customPath), true);
     expect($content['openapi'])->toBe('3.1.0');
 });
 
@@ -66,7 +68,7 @@ it('generates pretty-printed JSON with --pretty flag', function () {
         ->assertSuccessful()
     ;
 
-    $raw = file_get_contents(base_path('openapi.json'));
+    $raw = file_get_contents(public_path('openapi.json'));
     expect($raw)->toContain("\n");
     expect($raw)->toContain('    ');
 });
@@ -78,7 +80,7 @@ it('generates compact JSON without --pretty flag', function () {
         ->assertSuccessful()
     ;
 
-    $raw = file_get_contents(base_path('openapi.json'));
+    $raw = file_get_contents(public_path('openapi.json'));
     expect($raw)->not->toContain("\n");
 });
 
@@ -100,7 +102,7 @@ it('reads openapi config values', function () {
         ->assertSuccessful()
     ;
 
-    $content = json_decode(file_get_contents(base_path('openapi.json')), true);
+    $content = json_decode(file_get_contents(public_path('openapi.json')), true);
     expect($content['info']['title'])->toBe('My Custom API');
     expect($content['info']['version'])->toBe('2.5.0');
     expect($content['info']['description'])->toBe('Custom description');
@@ -119,7 +121,7 @@ it('uses app name as fallback title', function () {
         ->assertSuccessful()
     ;
 
-    $content = json_decode(file_get_contents(base_path('openapi.json')), true);
+    $content = json_decode(file_get_contents(public_path('openapi.json')), true);
     expect($content['info']['title'])->toBe('Fallback App');
 });
 

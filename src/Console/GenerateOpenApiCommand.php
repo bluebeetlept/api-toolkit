@@ -12,7 +12,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 final class GenerateOpenApiCommand extends Command
 {
     protected $signature = 'api-toolkit:openapi
-        {--output=openapi.json : Output file path}
+        {--output= : Output file path}
         {--pretty : Pretty print the JSON output}';
 
     protected $description = 'Generate an OpenAPI 3.1 specification from your API Toolkit resources';
@@ -42,16 +42,20 @@ final class GenerateOpenApiCommand extends Command
 
         $document = $builder->build($endpoints);
 
+        $outputConfig = $openApiConfig['output'] ?? [];
+        $pretty = $this->option('pretty') || (bool) ($outputConfig['pretty'] ?? false);
         $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
-        if ($this->option('pretty')) {
+        if ($pretty) {
             $flags |= JSON_PRETTY_PRINT;
         }
 
         $json = json_encode($document, $flags);
-        $outputPath = $this->option('output');
+        $outputPath = $this->option('output')
+            ?? $outputConfig['path']
+            ?? public_path('openapi.json');
 
-        if (file_put_contents(base_path($outputPath), $json) === false) {
+        if (file_put_contents($outputPath, $json) === false) {
             $this->error("Failed to write to {$outputPath}");
 
             return self::FAILURE;

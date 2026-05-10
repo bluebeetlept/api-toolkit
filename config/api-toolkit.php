@@ -57,6 +57,11 @@ return [
         'version' => '1.0.0',
         'description' => '',
 
+        'output' => [
+            'path' => public_path('openapi.json'),
+            'pretty' => false,
+        ],
+
         'servers' => [
             ['url' => env('APP_URL', 'http://localhost')],
         ],
