@@ -68,28 +68,10 @@ class FormRequest extends BaseFormRequest
         $queryRules = $this->queryParamRules();
 
         if (count($queryRules) > 0) {
-            $queryKeys = array_keys($this->query());
-
-            $queryRulesKeys = array_keys($queryRules);
-
-            $invalidQueryKeys = array_values(array_diff($queryKeys, $queryRulesKeys));
-
-            if (count($invalidQueryKeys) > 0) {
-                $message = count($invalidQueryKeys) > 1
-                    ? sprintf(
-                        'Received unknown parameters: %s',
-                        implode(', ', $invalidQueryKeys),
-                    )
-                    : sprintf(
-                        'Received unknown parameter: %s',
-                        $invalidQueryKeys[0],
-                    );
-
-                throw new HttpException(
-                    statusCode: Response::HTTP_BAD_REQUEST,
-                    message: $message,
-                );
-            }
+            $this->rejectUnknownKeys(
+                array_keys($this->query()),
+                array_keys($queryRules),
+            );
 
             /** @var ValidationFactory $factory */
             $factory = $this->container->make(ValidationFactory::class);
@@ -112,28 +94,29 @@ class FormRequest extends BaseFormRequest
         $inputKeys = array_keys(array_diff_key($this->input(), $this->query()));
 
         if (count($inputKeys) > 0) {
-            $rules = $this->rules();
-
-            $rulesKeys = array_keys($rules);
-
-            $invalidInputKeys = array_values(array_diff($inputKeys, $rulesKeys));
-
-            if (count($invalidInputKeys) > 0) {
-                $message = count($invalidInputKeys) > 1
-                    ? sprintf(
-                        'Received unknown parameters: %s',
-                        implode(', ', $invalidInputKeys),
-                    )
-                    : sprintf(
-                        'Received unknown parameter: %s',
-                        $invalidInputKeys[0],
-                    );
-
-                throw new HttpException(
-                    statusCode: Response::HTTP_BAD_REQUEST,
-                    message: $message,
-                );
-            }
+            $this->rejectUnknownKeys($inputKeys, array_keys($this->rules()));
         }
+    }
+
+    /**
+     * @param list<string> $submitted
+     * @param list<string> $allowed
+     */
+    private function rejectUnknownKeys(array $submitted, array $allowed): void
+    {
+        $unknown = array_values(array_diff($submitted, $allowed));
+
+        if ($unknown === []) {
+            return;
+        }
+
+        $message = count($unknown) > 1
+            ? sprintf('Received unknown parameters: %s', implode(', ', $unknown))
+            : sprintf('Received unknown parameter: %s', $unknown[0]);
+
+        throw new HttpException(
+            statusCode: Response::HTTP_BAD_REQUEST,
+            message: $message,
+        );
     }
 }

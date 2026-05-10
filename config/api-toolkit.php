@@ -58,7 +58,7 @@ return [
         'description' => '',
 
         'servers' => [
-            ['url' => env('APP_URL', 'http://localhost') . '/api'],
+            ['url' => env('APP_URL', 'http://localhost')],
         ],
 
         // 'security_schemes' => [

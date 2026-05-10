@@ -19,11 +19,7 @@ final readonly class PageParser
      */
     public function isCursor(Request $request): bool
     {
-        $page = $request->query('page', []);
-
-        if (! is_array($page)) {
-            return false;
-        }
+        $page = $this->pageArray($request);
 
         return isset($page['cursor']);
     }
@@ -33,12 +29,7 @@ final readonly class PageParser
      */
     public function getSize(Request $request): int
     {
-        $page = $request->query('page', []);
-
-        if (! is_array($page)) {
-            return $this->defaultSize;
-        }
-
+        $page = $this->pageArray($request);
         $size = (int) ($page['size'] ?? $this->defaultSize);
 
         return min(max($size, 1), $this->maxSize);
@@ -49,11 +40,7 @@ final readonly class PageParser
      */
     public function getNumber(Request $request): int
     {
-        $page = $request->query('page', []);
-
-        if (! is_array($page)) {
-            return 1;
-        }
+        $page = $this->pageArray($request);
 
         return max((int) ($page['number'] ?? 1), 1);
     }
@@ -63,12 +50,18 @@ final readonly class PageParser
      */
     public function getCursor(Request $request): string | null
     {
-        $page = $request->query('page', []);
-
-        if (! is_array($page)) {
-            return null;
-        }
+        $page = $this->pageArray($request);
 
         return $page['cursor'] ?? null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function pageArray(Request $request): array
+    {
+        $page = $request->query('page', []);
+
+        return is_array($page) ? $page : [];
     }
 }
