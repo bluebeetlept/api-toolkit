@@ -297,11 +297,13 @@ class Resource
      */
     private function applySparseFieldsets(string $type, array $attributes): array
     {
+        $parser = new FieldParser();
+
         if ($this->parsedFields === null) {
-            $this->parsedFields = (new FieldParser())->parse($this->request);
+            $this->parsedFields = $parser->parse($this->request);
         }
 
-        return (new FieldParser())->filter($attributes, $this->parsedFields[$type] ?? null);
+        return $parser->filter($attributes, $this->parsedFields[$type] ?? null);
     }
 
     /**

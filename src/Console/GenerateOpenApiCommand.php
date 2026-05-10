@@ -51,7 +51,11 @@ final class GenerateOpenApiCommand extends Command
         $json = json_encode($document, $flags);
         $outputPath = $this->option('output');
 
-        file_put_contents(base_path($outputPath), $json);
+        if (file_put_contents(base_path($outputPath), $json) === false) {
+            $this->error("Failed to write to {$outputPath}");
+
+            return self::FAILURE;
+        }
 
         $this->info("OpenAPI spec written to {$outputPath}");
 
