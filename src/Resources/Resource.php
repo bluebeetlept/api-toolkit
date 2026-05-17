@@ -104,6 +104,10 @@ class Resource
      */
     public static function resolveResourceClass(mixed $model): string | null
     {
+        if (! is_object($model) && ! is_string($model)) {
+            return null;
+        }
+
         $class = is_object($model) ? $model::class : $model;
 
         return self::$resourceMap[$class] ?? null;
