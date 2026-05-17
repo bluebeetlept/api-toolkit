@@ -48,6 +48,12 @@ it('resets resource map with resetResolvers', function () {
     expect(Resource::resolveResourceClass(Product::class))->toBeNull();
 });
 
+it('returns null for non-object non-string values', function () {
+    expect(Resource::resolveResourceClass(['raw' => 'data']))->toBeNull();
+    expect(Resource::resolveResourceClass(123))->toBeNull();
+    expect(Resource::resolveResourceClass(null))->toBeNull();
+});
+
 it('merges multiple map calls', function () {
     Resource::map([
         Product::class => ProductResource::class,
