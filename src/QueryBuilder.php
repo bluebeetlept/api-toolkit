@@ -204,8 +204,12 @@ final class QueryBuilder
             return $this->resourceInstance;
         }
 
-        if ($this->resourceClass !== null) {
-            $this->resourceInstance = app($this->resourceClass)->withRequest($this->request);
+        $resourceClass = $this->resourceClass
+            ?? Resource::resolveResourceClass($this->query->getModel());
+
+        if ($resourceClass !== null) {
+            $this->resourceClass = $resourceClass;
+            $this->resourceInstance = app($resourceClass)->withRequest($this->request);
 
             return $this->resourceInstance;
         }

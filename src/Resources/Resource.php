@@ -36,6 +36,13 @@ class Resource
     private static Closure | null $typeResolver = null;
 
     /**
+     * Model-to-resource class map.
+     *
+     * @var array<class-string, class-string<resource>>
+     */
+    private static array $resourceMap = [];
+
+    /**
      * The model class this resource represents.
      * When set to an Eloquent model, the JSON:API type is derived from its table name.
      *
@@ -81,12 +88,35 @@ class Resource
     }
 
     /**
-     * Reset global resolvers (useful for testing).
+     * Register a model-to-resource class map.
+     *
+     * @param array<class-string, class-string<resource>> $map
+     */
+    public static function map(array $map): void
+    {
+        self::$resourceMap = array_merge(self::$resourceMap, $map);
+    }
+
+    /**
+     * Resolve the resource class for a given model or class name.
+     *
+     * @return class-string<resource>|null
+     */
+    public static function resolveResourceClass(mixed $model): string | null
+    {
+        $class = is_object($model) ? $model::class : $model;
+
+        return self::$resourceMap[$class] ?? null;
+    }
+
+    /**
+     * Reset global resolvers and resource map (useful for testing).
      */
     public static function resetResolvers(): void
     {
         self::$idResolver = null;
         self::$typeResolver = null;
+        self::$resourceMap = [];
     }
 
     public static function make(mixed ...$data): array | null
