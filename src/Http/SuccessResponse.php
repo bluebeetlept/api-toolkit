@@ -88,23 +88,25 @@ final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
             return $this->envelope(['data' => null]);
         }
 
-        if ($this->resource === null) {
+        $resource = $this->resource ?? $this->resolveResourceFromData();
+
+        if ($resource === null) {
             return $this->envelope(['data' => $this->data]);
         }
 
         if ($this->isCollection()) {
             $collection = new ResourceCollection(
                 data: $this->data,
-                resourceClass: $this->resource,
+                resourceClass: $resource,
                 request: $this->request,
             );
 
             return $this->envelope($collection->toArray());
         }
 
-        $resource = app($this->resource)->withRequest($this->request);
+        $resourceInstance = app($resource)->withRequest($this->request);
 
-        $result = ['data' => $resource->toArray($this->data)];
+        $result = ['data' => $resourceInstance->toArray($this->data)];
 
         return $this->envelope($result);
     }
@@ -125,6 +127,29 @@ final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
         }
 
         return $result;
+    }
+
+    /**
+     * @return class-string<resource>|null
+     */
+    private function resolveResourceFromData(): string | null
+    {
+        $item = $this->data;
+
+        if ($item instanceof LengthAwarePaginator || $item instanceof CursorPaginator) {
+            $items = $item->items();
+            $item = $items[0] ?? null;
+        } elseif ($item instanceof Collection || $item instanceof EloquentCollection) {
+            $item = $item->first();
+        } elseif (is_array($item)) {
+            $item = $item[0] ?? null;
+        }
+
+        if ($item === null) {
+            return null;
+        }
+
+        return Resource::resolveResourceClass($item);
     }
 
     private function isCollection(): bool
