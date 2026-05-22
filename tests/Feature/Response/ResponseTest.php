@@ -221,6 +221,44 @@ it('omits optional fields when not set in error response', function () {
     expect($error)->not->toHaveKey('meta');
 });
 
+it('creates a success response with withStatus for Responsable flow', function () {
+    $response = new Response();
+
+    $successResponse = $response->success(['status' => 'generating'])->withStatus(202);
+    $result = $successResponse->toResponse(Request::create('/'));
+
+    expect($result->getStatusCode())->toBe(202);
+    expect($result->headers->get('Content-Type'))->toBe('application/vnd.api+json');
+
+    $data = json_decode($result->getContent(), true);
+    expect($data['data']['status'])->toBe('generating');
+});
+
+it('creates a success response with withHeaders for Responsable flow', function () {
+    $response = new Response();
+
+    $successResponse = $response->success(['test' => true])
+        ->withHeaders(['X-Request-Id' => 'req-456'])
+    ;
+    $result = $successResponse->toResponse(Request::create('/'));
+
+    expect($result->headers->get('X-Request-Id'))->toBe('req-456');
+    expect($result->headers->get('Content-Type'))->toBe('application/vnd.api+json');
+});
+
+it('creates a success response with withStatus and withHeaders combined', function () {
+    $response = new Response();
+
+    $successResponse = $response->success(['message' => 'accepted'])
+        ->withStatus(202)
+        ->withHeaders(['X-Custom' => 'value'])
+    ;
+    $result = $successResponse->toResponse(Request::create('/'));
+
+    expect($result->getStatusCode())->toBe(202);
+    expect($result->headers->get('X-Custom'))->toBe('value');
+});
+
 it('creates a 204 no content response with empty body', function () {
     $response = new Response();
 

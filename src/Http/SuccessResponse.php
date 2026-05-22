@@ -27,6 +27,13 @@ final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
 
     private Request | null $request = null;
 
+    private int $status = 200;
+
+    /**
+     * @var array<string, string>
+     */
+    private array $headers = [];
+
     /**
      * @param class-string<resource>|null $resource
      */
@@ -63,9 +70,26 @@ final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
         return $this;
     }
 
+    public function withStatus(int $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    public function withHeaders(array $headers): self
+    {
+        $this->headers = array_merge($this->headers, $headers);
+
+        return $this;
+    }
+
     public function toResponse($request): JsonResponse
     {
-        return $this->respond();
+        return $this->respond($this->status, $this->headers);
     }
 
     public function respond(int $status = 200, array $headers = []): JsonResponse
