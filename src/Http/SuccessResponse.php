@@ -115,6 +115,10 @@ final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
         $resource = $this->resource ?? $this->resolveResourceFromData();
 
         if ($resource === null) {
+            if ($this->isPaginator()) {
+                return $this->envelope($this->buildRawCollectionResponse());
+            }
+
             return $this->envelope(['data' => $this->data]);
         }
 
@@ -154,6 +158,52 @@ final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function buildRawCollectionResponse(): array
+    {
+        $result = [];
+
+        if ($this->data instanceof LengthAwarePaginator) {
+            $result['data'] = array_values($this->data->items());
+            $result['meta'] = [
+                'page' => [
+                    'currentPage' => $this->data->currentPage(),
+                    'lastPage' => $this->data->lastPage(),
+                    'perPage' => $this->data->perPage(),
+                    'total' => $this->data->total(),
+                ],
+            ];
+            $result['links'] = [
+                'first' => $this->data->url(1),
+                'last' => $this->data->url($this->data->lastPage()),
+                'prev' => $this->data->previousPageUrl(),
+                'next' => $this->data->nextPageUrl(),
+            ];
+        } elseif ($this->data instanceof CursorPaginator) {
+            $result['data'] = array_values($this->data->items());
+            $result['meta'] = [
+                'page' => [
+                    'perPage' => $this->data->perPage(),
+                    'hasMore' => $this->data->hasMorePages(),
+                ],
+            ];
+            $result['links'] = [
+                'prev' => $this->data->previousPageUrl(),
+                'next' => $this->data->nextPageUrl(),
+            ];
+        } else {
+            $items = $this->data instanceof Collection || $this->data instanceof EloquentCollection
+                ? $this->data->all()
+                : $this->data;
+
+            $result['data'] = array_values((array) $items);
+        }
+
+        return $result;
+    }
+
+    /**
      * @return class-string<resource>|null
      */
     private function resolveResourceFromData(): string | null
@@ -178,10 +228,15 @@ final class SuccessResponse implements \Illuminate\Contracts\Support\Responsable
 
     private function isCollection(): bool
     {
-        return $this->data instanceof LengthAwarePaginator
-            || $this->data instanceof CursorPaginator
+        return $this->isPaginator()
             || $this->data instanceof Collection
             || $this->data instanceof EloquentCollection
             || is_array($this->data);
+    }
+
+    private function isPaginator(): bool
+    {
+        return $this->data instanceof LengthAwarePaginator
+            || $this->data instanceof CursorPaginator;
     }
 }

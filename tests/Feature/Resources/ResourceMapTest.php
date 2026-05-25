@@ -122,6 +122,49 @@ it('auto-resolves resource in QueryBuilder', function () {
     expect($array['data'][0]['type'])->toBe('products');
 });
 
+it('auto-resolves resource for empty paginator', function () {
+    Resource::map([
+        Product::class => ProductResource::class,
+    ]);
+
+    $request = Request::create('/');
+
+    $result = QueryBuilder::for(Product::class, $request)->paginate();
+
+    $array = $result->toArray();
+    expect($array['data'])->toBe([]);
+    expect($array['meta']['page']['total'])->toBe(0);
+});
+
+it('auto-resolves resource for empty paginator via QueryBuilder', function () {
+    Resource::map([
+        Product::class => ProductResource::class,
+    ]);
+
+    $request = Request::create('/');
+    $result = QueryBuilder::for(Product::class, $request)->paginate();
+
+    $array = $result->toArray();
+    expect($array['data'])->toBe([]);
+    expect($array['meta']['page']['total'])->toBe(0);
+});
+
+it('returns proper JSON:API structure for unresolvable empty paginator', function () {
+    // No resource map - can't resolve from empty paginator
+    $paginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20, 1);
+
+    $response = new Response();
+    $result = $response->success($paginator)->respond();
+    $data = json_decode($result->getContent(), true);
+
+    expect($data['data'])->toBe([]);
+    expect($data['meta']['page']['total'])->toBe(0);
+    expect($data['meta']['page']['currentPage'])->toBe(1);
+    expect($data['meta']['page']['perPage'])->toBe(20);
+    expect($data['links'])->toHaveKey('first');
+    expect($data['links'])->toHaveKey('last');
+});
+
 it('explicit resource class takes precedence over map', function () {
     Resource::map([
         Product::class => ProductResource::class,
