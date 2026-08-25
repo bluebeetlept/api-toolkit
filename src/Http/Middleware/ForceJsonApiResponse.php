@@ -11,6 +11,10 @@ final class ForceJsonApiResponse
 {
     public function handle(Request $request, Closure $next)
     {
+        // Declare the request as JSON:API so content negotiation and exception
+        // rendering treat it as an API request (before the pipeline runs).
+        $request->headers->set('Accept', 'application/vnd.api+json');
+
         $response = $next($request);
 
         $response->headers->set(
