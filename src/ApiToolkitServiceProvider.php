@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit;
 
+use BlueBeetle\ApiToolkit\Console\GenerateBrunoCommand;
 use BlueBeetle\ApiToolkit\Console\GenerateOpenApiCommand;
 use BlueBeetle\ApiToolkit\Console\MakeResourceCommand;
 use BlueBeetle\ApiToolkit\Http\Response;
@@ -36,6 +37,7 @@ final class ApiToolkitServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
+                GenerateBrunoCommand::class,
                 GenerateOpenApiCommand::class,
                 MakeResourceCommand::class,
             ]);
