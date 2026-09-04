@@ -12,7 +12,7 @@ permissions:
 jobs:
   release_drafter:
     name: Release Drafter
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
 
     steps:
       - name: Wait for PR merge to propagate
