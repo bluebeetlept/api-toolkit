@@ -6,6 +6,7 @@ namespace BlueBeetle\ApiToolkit;
 
 use BlueBeetle\ApiToolkit\Console\GenerateOpenApiCommand;
 use BlueBeetle\ApiToolkit\Console\MakeResourceCommand;
+use BlueBeetle\ApiToolkit\Exceptions\ConfigureExceptionHandler;
 use BlueBeetle\ApiToolkit\Http\Response;
 use BlueBeetle\ApiToolkit\Parsers\PageParser;
 use BlueBeetle\IdempotencyMiddleware\IdempotencyServiceProvider;
@@ -17,6 +18,8 @@ final class ApiToolkitServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/api-toolkit.php', 'api-toolkit');
+
+        (new ConfigureExceptionHandler())($this->app);
 
         $this->app->singleton(Response::class, function () {
             return new Response(
