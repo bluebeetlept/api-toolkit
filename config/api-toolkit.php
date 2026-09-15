@@ -47,7 +47,9 @@ return [
     | OpenAPI
     |--------------------------------------------------------------------------
     |
-    | Configuration for the OpenAPI spec generator.
+    | Configuration for the OpenAPI 3.1 spec generator.
+    | https://www.openapis.org/
+    |
     | Run: php artisan api-toolkit:openapi
     |
     */
@@ -76,6 +78,34 @@ return [
         // 'security' => [
         //     ['bearerAuth' => []],
         // ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bruno
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the Bruno API client collection generator.
+    | https://www.usebruno.com/
+    |
+    | Run: php artisan api-toolkit:bruno
+    |
+    */
+
+    'bruno' => [
+        'name' => env('APP_NAME', 'API'),
+        'output' => base_path('bruno'),
+        'base_url' => '{{host}}',
+
+        // Define multiple collections for versioned APIs.
+        // When set, the generator creates a separate Bruno collection per entry.
+        'collections' => [
+            // 'v1' => [
+            //     'name' => 'API v1',
+            //     'prefix' => 'v1',
+            //     'output' => app_path('V1/Bruno'),
+            // ],
+        ],
     ],
 
 ];
