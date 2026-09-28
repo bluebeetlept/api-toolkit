@@ -13,6 +13,19 @@ final class ConfigureExceptionHandler
 {
     private const string MARKER = 'api-toolkit.exceptions.configured';
 
+    /**
+     * Make sure a handler exists before anything boots, so a failure during boot
+     * still renders. Applying the JSON:API rules is the host's call: an
+     * application that also serves web requests renders those itself.
+     */
+    public static function bind(Application $application): void
+    {
+        $application->singleton(
+            abstract: ExceptionHandlerContract::class,
+            concrete: Handler::class,
+        );
+    }
+
     public function __invoke(Application $application): void
     {
         if ($application->bound(self::MARKER)) {
@@ -21,10 +34,7 @@ final class ConfigureExceptionHandler
 
         $application->instance(self::MARKER, true);
 
-        $application->singleton(
-            abstract: ExceptionHandlerContract::class,
-            concrete: Handler::class,
-        );
+        self::bind($application);
 
         $application->afterResolving(
             abstract: Handler::class,

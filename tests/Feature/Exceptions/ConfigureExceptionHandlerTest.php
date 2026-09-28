@@ -68,3 +68,13 @@ it('configures the handler when used on its own', function () {
 
     expect($application->bound(ExceptionHandlerContract::class))->toBeTrue();
 });
+
+it('applies the rules once the host asks for them', function () {
+    $application = registeredApplication();
+
+    (new ConfigureExceptionHandler())($application);
+
+    $handler = $application->make(ExceptionHandlerContract::class);
+
+    expect($handler)->toBeInstanceOf(Handler::class);
+});
