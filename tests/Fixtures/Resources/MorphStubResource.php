@@ -1,0 +1,11 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace BlueBeetle\ApiToolkit\Tests\Fixtures\Resources;
+
+use BlueBeetle\ApiToolkit\Resources\Resource;
+
+final class MorphStubResource extends Resource
+{
+}

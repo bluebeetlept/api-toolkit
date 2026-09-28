@@ -145,6 +145,12 @@ class Resource
             return null;
         }
 
+        $delegate = $this->delegateFor($model);
+
+        if ($delegate !== null) {
+            return $delegate->toArray($model);
+        }
+
         if (! method_exists($this, 'attributes')) {
             throw new BadMethodCallException(
                 static::class.' must implement an attributes() method.',
@@ -240,6 +246,12 @@ class Resource
 
     public function resolveType($model = null): string
     {
+        $delegate = $this->delegateFor($model);
+
+        if ($delegate !== null) {
+            return $delegate->resolveType($model);
+        }
+
         if ($this->type !== '') {
             return $this->type;
         }
@@ -284,6 +296,25 @@ class Resource
                 static::class,
             ),
         );
+    }
+
+    /**
+     * A resource that declares no attributes of its own stands in for a
+     * polymorphic relationship: the model decides which resource renders it.
+     */
+    private function delegateFor(mixed $model): self | null
+    {
+        if ($model === null || method_exists($this, 'attributes')) {
+            return null;
+        }
+
+        $resourceClass = self::resolveResourceClass($model);
+
+        if ($resourceClass === null || $resourceClass === static::class) {
+            return null;
+        }
+
+        return app($resourceClass)->withRequest($this->request);
     }
 
     /**
