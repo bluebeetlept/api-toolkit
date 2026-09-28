@@ -19,7 +19,7 @@ final class ApiToolkitServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/api-toolkit.php', 'api-toolkit');
 
-        (new ConfigureExceptionHandler())($this->app);
+        ConfigureExceptionHandler::bind($this->app);
 
         $this->app->singleton(Response::class, function () {
             return new Response(
