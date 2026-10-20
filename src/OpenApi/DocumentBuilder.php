@@ -5,11 +5,12 @@ declare(strict_types = 1);
 namespace BlueBeetle\ApiToolkit\OpenApi;
 
 use Illuminate\Support\Str;
-use Throwable;
 
 final class DocumentBuilder
 {
     private readonly SchemaBuilder $schemaBuilder;
+
+    private readonly RequestBodyBuilder $requestBodyBuilder;
 
     /**
      * @var array<string, array<string, mixed>>
@@ -50,6 +51,7 @@ final class DocumentBuilder
         private readonly array $security = [],
     ) {
         $this->schemaBuilder = new SchemaBuilder();
+        $this->requestBodyBuilder = new RequestBodyBuilder();
     }
 
     /**
@@ -204,7 +206,9 @@ final class DocumentBuilder
         }
 
         if (in_array(mb_strtoupper($httpMethod), ['POST', 'PUT', 'PATCH'], true)) {
-            $requestBody = $this->buildRequestBody($endpoint);
+            $requestBody = $endpoint->formRequestClass === null
+                ? null
+                : $this->requestBodyBuilder->build($endpoint->formRequestClass, $httpMethod);
 
             if ($requestBody !== null) {
                 $operation['requestBody'] = $requestBody;
@@ -271,94 +275,6 @@ final class DocumentBuilder
         }
 
         return $responses;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function buildRequestBody(EndpointDefinition $endpoint): array | null
-    {
-        if ($endpoint->formRequestClass === null) {
-            return null;
-        }
-
-        if (! method_exists($endpoint->formRequestClass, 'rules')) {
-            return null;
-        }
-
-        try {
-            $request = new ($endpoint->formRequestClass)();
-            $rules = $request->rules();
-        } catch (Throwable) {
-            return null;
-        }
-
-        if ($rules === []) {
-            return null;
-        }
-
-        $properties = [];
-        $required = [];
-
-        foreach ($rules as $field => $fieldRules) {
-            if (str_contains($field, '.')) {
-                continue;
-            }
-
-            $ruleList = is_array($fieldRules) ? $fieldRules : explode('|', $fieldRules);
-
-            $properties[$field] = $this->rulesToOpenApiType($ruleList);
-
-            if (in_array('required', $ruleList, true)) {
-                $required[] = $field;
-            }
-        }
-
-        $schema = ['type' => 'object', 'properties' => $properties];
-
-        if ($required !== []) {
-            $schema['required'] = $required;
-        }
-
-        return [
-            'required' => true,
-            'content' => [
-                'application/json' => [
-                    'schema' => $schema,
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * @param list<mixed> $rules
-     *
-     * @return array<string, mixed>
-     */
-    private function rulesToOpenApiType(array $rules): array
-    {
-        $type = ['type' => 'string'];
-
-        foreach ($rules as $rule) {
-            if (! is_string($rule)) {
-                continue;
-            }
-
-            $type = match (true) {
-                $rule === 'integer' || $rule === 'numeric' => ['type' => 'integer'],
-                $rule === 'boolean' => ['type' => 'boolean'],
-                $rule === 'array' => ['type' => 'array', 'items' => ['type' => 'string']],
-                $rule === 'email' => ['type' => 'string', 'format' => 'email'],
-                $rule === 'url' => ['type' => 'string', 'format' => 'uri'],
-                $rule === 'date' => ['type' => 'string', 'format' => 'date'],
-                $rule === 'nullable' => array_merge($type, ['nullable' => true]),
-                str_starts_with($rule, 'min:') => array_merge($type, ['minLength' => (int) Str::after($rule, 'min:')]),
-                str_starts_with($rule, 'max:') => array_merge($type, ['maxLength' => (int) Str::after($rule, 'max:')]),
-                default => $type,
-            };
-        }
-
-        return $type;
     }
 
     private function generateSummary(EndpointDefinition $endpoint, string $httpMethod): string

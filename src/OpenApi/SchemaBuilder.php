@@ -264,10 +264,10 @@ final class SchemaBuilder
                 'links' => [
                     'type' => 'object',
                     'properties' => [
-                        'first' => ['type' => 'string', 'nullable' => true],
-                        'last' => ['type' => 'string', 'nullable' => true],
-                        'prev' => ['type' => 'string', 'nullable' => true],
-                        'next' => ['type' => 'string', 'nullable' => true],
+                        'first' => ['type' => ['string', 'null']],
+                        'last' => ['type' => ['string', 'null']],
+                        'prev' => ['type' => ['string', 'null']],
+                        'next' => ['type' => ['string', 'null']],
                     ],
                 ],
             ],

@@ -453,7 +453,8 @@ it('maps form rules to OpenAPI types', function () {
     expect($props['birthday']['type'])->toBe('string');
     expect($props['birthday']['format'])->toBe('date');
     expect($props['tags']['type'])->toBe('array');
-    expect($props['description']['nullable'])->toBeTrue();
+    // OpenAPI 3.1 has no `nullable`; null joins the type instead
+    expect($props['description']['type'])->toBe(['string', 'null']);
 });
 
 it('maps min and max rules to schema constraints', function () {
@@ -480,7 +481,7 @@ it('maps min and max rules to schema constraints', function () {
     expect($props['name']['maxLength'])->toBe(255);
 });
 
-it('skips nested dot-notation rules in request body', function () {
+it('describes nested dot-notation rules as the items they belong to', function () {
     $builder = new DocumentBuilder();
 
     $endpoints = [
@@ -500,8 +501,10 @@ it('skips nested dot-notation rules in request body', function () {
 
     $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
 
-    expect($props)->toHaveKey('items');
-    expect($props)->not->toHaveKey('items.name');
+    expect($props)->not->toHaveKey('items.*.name');
+    expect($props['items']['type'])->toBe('array');
+    expect($props['items']['items']['properties']['name']['type'])->toBe('string');
+    expect($props['items']['items']['required'])->toBe(['name']);
 });
 
 it('omits request body when form request has no rules', function () {
@@ -612,7 +615,7 @@ it('generates single GET summary', function () {
     expect($document['paths']['/api/v1/stubs/{stub}']['get']['summary'])->toBe('Get Open Api Stub');
 });
 
-it('skips non-string rules in rulesToOpenApiType', function () {
+it('leaves the type open when only a rule object knows it', function () {
     $builder = new DocumentBuilder();
 
     $endpoints = [
@@ -631,7 +634,7 @@ it('skips non-string rules in rulesToOpenApiType', function () {
     $document = $builder->build($endpoints);
 
     $props = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema']['properties'];
-    expect($props['name']['type'])->toBe('string');
+    expect($props['name'])->not->toHaveKey('type');
 });
 
 it('generates default summary for unknown HTTP method', function () {
