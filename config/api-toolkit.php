@@ -66,6 +66,9 @@ return [
             ['url' => env('APP_URL', 'http://localhost')],
         ],
 
+        // The route URIs to document, as Str::is() patterns, e.g. ['api/v1/*']
+        'paths' => ['*'],
+
         // 'security_schemes' => [
         //     'bearerAuth' => [
         //         'type' => 'http',

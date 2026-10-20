@@ -4,30 +4,43 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\OpenApi;
 
+use BlueBeetle\ApiToolkit\Http\Response;
+use BlueBeetle\ApiToolkit\OpenApi\Attributes\ApiResource;
 use BlueBeetle\ApiToolkit\QueryBuilder;
 use BlueBeetle\ApiToolkit\Resources\Resource;
+use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
+use ReflectionParameter;
+use ReflectionProperty;
 
 final readonly class RouteScanner
 {
     public function __construct(
         private Router $router,
+        private Config $config,
     ) {
     }
 
     /**
-     * Scan all routes and return endpoint definitions for those using api-toolkit.
+     * Scan the routes the `api-toolkit.openapi.paths` patterns cover and return endpoint definitions for those
+     * using api-toolkit.
      *
      * @return list<EndpointDefinition>
      */
     public function scan(): array
     {
+        /** @var list<string> $paths */
+        $paths = $this->config->get('api-toolkit.openapi.paths', ['*']);
+
         return Collection::make($this->router->getRoutes()->getRoutes())
+            ->filter(static fn (Route $route): bool => Str::is($paths, mb_ltrim($route->uri(), '/')))
             ->map(fn (Route $route): EndpointDefinition | null => $this->analyzeRoute($route))
             ->filter()
             ->values()
@@ -43,11 +56,7 @@ final readonly class RouteScanner
             return null;
         }
 
-        if (! str_contains($action['uses'], '@') && ! str_contains($action['uses'], '::')) {
-            [$controller, $method] = [$action['uses'], '__invoke'];
-        } else {
-            [$controller, $method] = explode('@', $action['uses']);
-        }
+        [$controller, $method] = Str::parseCallback($action['uses'], '__invoke');
 
         if (! class_exists($controller)) {
             return null;
@@ -60,13 +69,16 @@ final readonly class RouteScanner
         }
 
         $methodReflection = $reflection->getMethod($method);
-        $source = $this->readMethodSource($methodReflection);
+        $source = MethodSource::of($methodReflection) ?? '';
 
-        if ($source === null) {
-            return null;
+        $resourceClass = $this->declaredResource($methodReflection, $reflection)
+            ?? $this->extractResourceClass($source, $controller)
+            ?? $this->resourceForListedModel($source, $controller);
+
+        // Only an endpoint answering through the toolkit hands its models to a resource
+        if ($resourceClass === null && $this->answersThroughToolkit($reflection, $methodReflection)) {
+            $resourceClass = $this->resourceForBoundModel($methodReflection);
         }
-
-        $resourceClass = $this->extractResourceClass($source, $controller);
 
         if ($resourceClass === null) {
             return null;
@@ -86,30 +98,6 @@ final readonly class RouteScanner
             formRequestClass: $formRequestClass,
             routeName: $route->getName(),
         );
-    }
-
-    private function readMethodSource(ReflectionMethod $method): string | null
-    {
-        $filename = $method->getFileName();
-
-        if ($filename === false || ! file_exists($filename)) {
-            return null;
-        }
-
-        $startLine = $method->getStartLine();
-        $endLine = $method->getEndLine();
-
-        if ($startLine === false || $endLine === false) {
-            return null;
-        }
-
-        $lines = file($filename);
-
-        if ($lines === false) {
-            return null;
-        }
-
-        return implode('', array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
     }
 
     /**
@@ -132,6 +120,106 @@ final readonly class RouteScanner
         }
 
         return null;
+    }
+
+    /**
+     * A list endpoint names its model, in `QueryBuilder::for(Model::class)` or a `Model::query()` it paginates, and
+     * the resource map knows its resource.
+     *
+     * @return class-string<resource>|null
+     */
+    private function resourceForListedModel(string $source, string $controllerClass): string | null
+    {
+        if (! $this->isListEndpoint($source)) {
+            return null;
+        }
+
+        foreach (['/QueryBuilder::for\(\s*(\w+)::(?:class|query\()/', '/(\w+)::query\(/'] as $pattern) {
+            if (preg_match($pattern, $source, $matches)) {
+                $model = $this->resolveClassName($matches[1], $controllerClass);
+
+                return $model === null ? null : Resource::resolveResourceClass($model);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The resource the endpoint says it answers with, on its method or else on its controller.
+     *
+     * @param ReflectionClass<object> $controller
+     *
+     * @return class-string<resource>|null
+     */
+    private function declaredResource(ReflectionMethod $method, ReflectionClass $controller): string | null
+    {
+        foreach ([$method, $controller] as $declarer) {
+            $attribute = $declarer->getAttributes(ApiResource::class)[0] ?? null;
+
+            if ($attribute !== null) {
+                return $attribute->newInstance()->resource;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * An endpoint about one record, such as viewing or deleting it, often takes the record as a route-bound
+     * parameter. It is a guess, the last one tried; an endpoint answering with something else says so with
+     * #[ApiResource].
+     *
+     * @return class-string<resource>|null
+     */
+    private function resourceForBoundModel(ReflectionMethod $method): string | null
+    {
+        foreach ($this->parameterClasses($method) as $class) {
+            $resource = Resource::resolveResourceClass($class);
+
+            if ($resource !== null) {
+                return $resource;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param ReflectionClass<object> $controller
+     */
+    private function answersThroughToolkit(ReflectionClass $controller, ReflectionMethod $method): bool
+    {
+        $types = [
+            ...array_map(static fn (ReflectionProperty $property): mixed => $property->getType(), $controller->getProperties()),
+            ...array_map(static fn (ReflectionParameter $parameter): mixed => $parameter->getType(), $method->getParameters()),
+        ];
+
+        foreach ($types as $type) {
+            if ($type instanceof ReflectionNamedType && is_a($type->getName(), Response::class, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<class-string>
+     */
+    private function parameterClasses(ReflectionMethod $method): array
+    {
+        $classes = [];
+
+        foreach ($method->getParameters() as $parameter) {
+            $type = $parameter->getType();
+
+            if ($type instanceof ReflectionNamedType && ! $type->isBuiltin() && class_exists($type->getName())) {
+                $classes[] = $type->getName();
+            }
+        }
+
+        return $classes;
     }
 
     /**
@@ -169,7 +257,7 @@ final readonly class RouteScanner
     }
 
     /**
-     * Determine if this endpoint returns a collection (uses paginate/cursor/get on QueryBuilder).
+     * Whether the endpoint answers with a page of records rather than one.
      */
     private function isListEndpoint(string $source): bool
     {
@@ -179,23 +267,15 @@ final readonly class RouteScanner
     }
 
     /**
-     * Extract the FormRequest class from the method's type-hinted parameters.
+     * The form request the endpoint validates its input with.
      *
      * @return class-string|null
      */
     private function extractFormRequestClass(ReflectionMethod $method): string | null
     {
-        foreach ($method->getParameters() as $parameter) {
-            $type = $parameter->getType();
-
-            if (! $type instanceof ReflectionNamedType || $type->isBuiltin()) {
-                continue;
-            }
-
-            $className = $type->getName();
-
-            if (is_subclass_of($className, \Illuminate\Foundation\Http\FormRequest::class)) {
-                return $className;
+        foreach ($this->parameterClasses($method) as $class) {
+            if (is_subclass_of($class, FormRequest::class)) {
+                return $class;
             }
         }
 

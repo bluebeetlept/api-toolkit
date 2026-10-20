@@ -79,6 +79,8 @@ it('builds collection schema', function () {
     expect($schema['properties']['data']['items']['$ref'])->toBe('#/components/schemas/OpenApiStub');
     expect($schema['properties'])->toHaveKey('meta');
     expect($schema['properties'])->toHaveKey('links');
+    // OpenAPI 3.1 has no `nullable`; null joins the type instead
+    expect($schema['properties']['links']['properties']['next']['type'])->toBe(['string', 'null']);
 });
 
 it('builds single resource response schema', function () {
