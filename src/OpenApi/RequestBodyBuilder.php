@@ -470,14 +470,24 @@ final class RequestBodyBuilder
         $class = new ReflectionClass($formRequestClass);
 
         do {
-            if ($class->hasMethod('rules') && $class->getMethod('rules')->getDeclaringClass()->getName() === $class->getName()) {
-                $comments = [...$this->commentsIn(MethodSource::of($class->getMethod('rules')) ?? ''), ...$comments];
+            foreach ($class->getMethods() as $method) {
+                if ($method->getDeclaringClass()->getName() === $class->getName() && $this->holdsRules($method->getName())) {
+                    $comments = [...$this->commentsIn(MethodSource::of($method) ?? ''), ...$comments];
+                }
             }
 
             $class = $class->getParentClass();
         } while ($class !== false);
 
         return $comments;
+    }
+
+    /**
+     * `rules()` itself, and the helpers a request splits its rules into (`counterpartyRules()`), its traits' too.
+     */
+    private function holdsRules(string $method): bool
+    {
+        return $method === 'rules' || str_ends_with($method, 'Rules');
     }
 
     /**
