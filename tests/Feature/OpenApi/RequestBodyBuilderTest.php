@@ -11,6 +11,7 @@ use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubChildFormReques
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubContextFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubLongEnumFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubNestedFormRequest;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubSplitFormRequest;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -88,6 +89,15 @@ it('reads comments from the requests a request extends', function () {
 
     expect($properties['kind']['examples'])->toBe(['rush'])
         ->and($properties['reference']['examples'])->toBe(['PO-2026-001'])
+    ;
+});
+
+it('reads comments from the methods and traits a request splits its rules into', function () {
+    $properties = requestBodySchema(RequestBodyStubSplitFormRequest::class)['properties'];
+
+    expect($properties['channel']['description'])->toBe('Where the order came from.')
+        ->and($properties['channel']['examples'])->toBe(['phone'])
+        ->and($properties['email']['examples'])->toBe(['ana@example.com'])
     ;
 });
 
