@@ -2,14 +2,12 @@
 
 declare(strict_types = 1);
 
-use Symplify\EasyCodingStandard\Config\ECSConfig;
 use Eufaturo\CodingStandards\Config\EufaturoEcsConfig;
+use Symplify\EasyCodingStandard\Config\ECSConfig;
 
-return static function (ECSConfig $ecsConfig): void {
-    $ecsConfig->paths([
-        __DIR__ . '/src',
-        __DIR__ . '/tests',
-    ]);
-
-    EufaturoEcsConfig::setup($ecsConfig);
-};
+return EufaturoEcsConfig::setup(ECSConfig::configure())
+    ->withPaths([
+        __DIR__.'/src',
+        __DIR__.'/tests',
+    ])
+;
