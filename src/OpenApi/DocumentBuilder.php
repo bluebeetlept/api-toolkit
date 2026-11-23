@@ -201,8 +201,15 @@ final class DocumentBuilder
         $operation['summary'] = $this->generateSummary($endpoint, $httpMethod);
         $operation['tags'] = [$this->resolveTagName($endpoint)];
 
-        if ($endpoint->isList && mb_strtoupper($httpMethod) === 'GET') {
-            $operation['parameters'] = $this->schemaBuilder->buildQueryParameters($endpoint->resourceClass);
+        if (mb_strtoupper($httpMethod) === 'GET') {
+            $parameters = [
+                ...($endpoint->isList ? $this->schemaBuilder->buildQueryParameters($endpoint->resourceClass) : []),
+                ...($endpoint->formRequestClass === null ? [] : $this->requestBodyBuilder->queryParameters($endpoint->formRequestClass)),
+            ];
+
+            if ($parameters !== []) {
+                $operation['parameters'] = $parameters;
+            }
         }
 
         if (in_array(mb_strtoupper($httpMethod), ['POST', 'PUT', 'PATCH'], true)) {

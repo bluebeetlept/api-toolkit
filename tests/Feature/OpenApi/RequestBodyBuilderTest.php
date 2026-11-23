@@ -11,6 +11,7 @@ use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubChildFormReques
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubContextFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubLongEnumFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubNestedFormRequest;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubQueryFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\RequestBodyStubSplitFormRequest;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Http\FormRequest;
@@ -125,4 +126,23 @@ it('leaves out an enum too long to read', function () {
     $schema = requestBodySchema(RequestBodyStubLongEnumFormRequest::class);
 
     expect($schema['properties']['code'])->toBe(['type' => 'string']);
+});
+
+it('describes the query parameters a request validates, with the comments above them', function () {
+    $parameters = collect((new RequestBodyBuilder())->queryParameters(RequestBodyStubQueryFormRequest::class))->keyBy('name');
+
+    expect($parameters->keys()->all())->toBe(['statuses[]', 'archived', 'warehouse'])
+        ->and($parameters['statuses[]']['in'])->toBe('query')
+        ->and($parameters['statuses[]']['description'])->toBe('Only the products in these states.')
+        ->and($parameters['statuses[]']['schema']['type'])->toBe('array')
+        ->and($parameters['statuses[]']['schema']['items']['enum'])->not->toBeEmpty()
+        ->and($parameters['archived']['schema']['type'])->toBe('boolean')
+        ->and($parameters['archived']['description'])->toBe('Only archived products (true), or only the others (false).')
+        ->and($parameters['archived']['required'])->toBeFalse()
+        ->and($parameters['warehouse']['required'])->toBeTrue()
+    ;
+});
+
+it('describes no query parameters for a request without query rules', function () {
+    expect((new RequestBodyBuilder())->queryParameters(RequestBodyStubNestedFormRequest::class))->toBe([]);
 });

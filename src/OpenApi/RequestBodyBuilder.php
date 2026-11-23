@@ -74,13 +74,54 @@ final class RequestBodyBuilder
     }
 
     /**
+     * The query parameters a form request validates in `queryParamRules()`: one per top-level key, an array for a
+     * starred key (`statuses.*` → `statuses[]`), with its description and example from the comment above the rule.
+     *
+     * @param class-string $formRequestClass
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function queryParameters(string $formRequestClass): array
+    {
+        $rules = $this->rules($formRequestClass, 'GET', 'queryParamRules');
+
+        if ($rules === null || $rules === []) {
+            return [];
+        }
+
+        $comments = $this->ruleComments($formRequestClass);
+        $parameters = [];
+
+        foreach ($this->tree($rules)['children'] as $name => $node) {
+            $schema = $this->schemaFor($node, (string) $name, $comments);
+            $description = $schema['description'] ?? null;
+            unset($schema['description']);
+
+            $parameter = [
+                'name' => isset($node['children']['*']) ? "{$name}[]" : (string) $name,
+                'in' => 'query',
+                'required' => in_array('required', $this->ruleStrings($node['rules']), true),
+            ];
+
+            if (is_string($description) && $description !== '') {
+                $parameter['description'] = $description;
+            }
+
+            $parameter['schema'] = $this->openWhenEmpty($schema);
+            $parameters[] = $parameter;
+        }
+
+        return $parameters;
+    }
+
+    /**
      * @param class-string $formRequestClass
      *
      * @return array<array-key, mixed>|null
      */
-    private function rules(string $formRequestClass, string $httpMethod): array | null
+    private function rules(string $formRequestClass, string $httpMethod, string $method = 'rules'): array | null
     {
-        if (! is_subclass_of($formRequestClass, FormRequest::class) || ! method_exists($formRequestClass, 'rules')) {
+        if (! is_subclass_of($formRequestClass, FormRequest::class) || ! method_exists($formRequestClass, $method)) {
             return null;
         }
 
@@ -94,7 +135,7 @@ final class RequestBodyBuilder
                 (self::$preparer)($request);
             }
 
-            $rules = $container->call([$request, 'rules']);
+            $rules = $container->call([$request, $method]);
         } catch (Throwable) {
             return null;
         }
