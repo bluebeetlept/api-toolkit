@@ -8,6 +8,7 @@ use BlueBeetle\ApiToolkit\OpenApi\DocumentBuilder;
 use BlueBeetle\ApiToolkit\OpenApi\EndpointDefinition;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubEmptyFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubFormRequest;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubListFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubMinMaxFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubNestedFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubNoRulesMethodRequest;
@@ -741,4 +742,26 @@ it('omits required array when no fields are required', function () {
 
     $schema = $document['paths']['/api/v1/stubs']['post']['requestBody']['content']['application/json']['schema'];
     expect($schema)->not->toHaveKey('required');
+});
+
+it('adds a list request\'s own query parameters, each name once', function () {
+    $document = (new DocumentBuilder(title: 'Test API', version: '1.0.0'))->build([
+        new EndpointDefinition(
+            path: '/api/v1/stubs',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: true,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'index',
+            formRequestClass: DocBuilderStubListFormRequest::class,
+            routeName: null,
+        ),
+    ]);
+
+    $parameters = collect($document['paths']['/api/v1/stubs']['get']['parameters']);
+
+    expect($parameters->pluck('name')->duplicates())->toBeEmpty()
+        ->and($parameters->where('name', 'include'))->toHaveCount(1)
+        ->and($parameters->firstWhere('name', 'archived')['description'])->toBe('Only archived stubs (true), or only the others (false).')
+    ;
 });

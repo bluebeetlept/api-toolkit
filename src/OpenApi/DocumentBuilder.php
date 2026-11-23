@@ -202,10 +202,17 @@ final class DocumentBuilder
         $operation['tags'] = [$this->resolveTagName($endpoint)];
 
         if (mb_strtoupper($httpMethod) === 'GET') {
-            $parameters = [
+            $parameters = [];
+
+            // A parameter the toolkit documents itself (include, page) wins over a request rule of the same name.
+            foreach ([
                 ...($endpoint->isList ? $this->schemaBuilder->buildQueryParameters($endpoint->resourceClass) : []),
                 ...($endpoint->formRequestClass === null ? [] : $this->requestBodyBuilder->queryParameters($endpoint->formRequestClass)),
-            ];
+            ] as $parameter) {
+                $parameters[$parameter['name']] ??= $parameter;
+            }
+
+            $parameters = array_values($parameters);
 
             if ($parameters !== []) {
                 $operation['parameters'] = $parameters;
