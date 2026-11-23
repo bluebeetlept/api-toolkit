@@ -12,6 +12,7 @@ use BlueBeetle\ApiToolkit\Tests\Fixtures\Models\StubModel;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\ProductResource;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\StubQueryResource;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 it('creates a query builder from a model class', function () {
     $request = Request::create('/');
@@ -116,19 +117,29 @@ it('works without a resource', function () {
     expect($sql)->toContain('status');
 });
 
-it('ignores disallowed includes', function () {
+it('rejects an include that is not allowed', function () {
     $request = Request::create('/', 'GET', ['include' => 'category,secret']);
 
-    $builder = QueryBuilder::for(StubModel::class, $request)
+    QueryBuilder::for(StubModel::class, $request)
         ->allowedIncludes(['category'])
+        ->apply()
     ;
+})->throws(ValidationException::class, 'The [secret] is not a valid include value.');
 
-    $query = $builder->apply()->getQuery();
+it('rejects any include when none are allowed', function () {
+    $request = Request::create('/', 'GET', ['include' => 'category']);
 
-    $eagerLoads = $query->getEagerLoads();
-    expect($eagerLoads)->toHaveKey('category');
-    expect($eagerLoads)->not->toHaveKey('secret');
-});
+    QueryBuilder::for(StubModel::class, $request)->apply();
+})->throws(ValidationException::class, 'The [category] is not a valid include value.');
+
+it('rejects an include its resource does not declare', function () {
+    $request = Request::create('/', 'GET', ['include' => 'secret']);
+
+    QueryBuilder::for(Product::class, $request)
+        ->fromResource(ProductResource::class)
+        ->apply()
+    ;
+})->throws(ValidationException::class, 'The [secret] is not a valid include value.');
 
 it('does nothing with no configuration', function () {
     $request = Request::create('/', 'GET', [

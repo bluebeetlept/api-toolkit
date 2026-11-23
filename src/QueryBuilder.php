@@ -16,6 +16,7 @@ use BlueBeetle\ApiToolkit\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 final class QueryBuilder
 {
@@ -187,15 +188,26 @@ final class QueryBuilder
         ))->apply($this->request, $this->query);
     }
 
+    /**
+     * @throws ValidationException when an include is not one the resource allows
+     */
     private function applyIncludes(): void
     {
         $includes = $this->resolveIncludes();
+        $parser = new IncludeParser($includes);
+        $unknown = $parser->unknown($this->request);
+
+        if ($unknown !== []) {
+            throw ValidationException::withMessages([
+                'include' => sprintf('The [%s] is not a valid include value.', implode(',', $unknown)),
+            ]);
+        }
 
         if ($includes === []) {
             return;
         }
 
-        (new IncludeParser($includes))->apply($this->request, $this->query);
+        $parser->apply($this->request, $this->query);
     }
 
     private function resolveResource(): Resource | null

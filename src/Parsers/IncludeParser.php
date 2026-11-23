@@ -35,13 +35,11 @@ final readonly class IncludeParser
      */
     public function parse(Request $request): array
     {
-        $include = $request->query('include', '');
+        $requested = $this->requested($request);
 
-        if ($include === '' || $include === null) {
+        if ($requested === []) {
             return [];
         }
-
-        $requested = array_map('trim', explode(',', $include));
 
         if ($this->allowed === []) {
             return $requested;
@@ -50,5 +48,31 @@ final readonly class IncludeParser
         return array_values(
             array_filter($requested, fn (string $name): bool => in_array($name, $this->allowed, true)),
         );
+    }
+
+    /**
+     * The requested includes outside the allowed ones; with none allowed, every requested include.
+     *
+     * @return list<string>
+     */
+    public function unknown(Request $request): array
+    {
+        return array_values(array_diff($this->requested($request), $this->allowed));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function requested(Request $request): array
+    {
+        $include = $request->query('include', '');
+
+        if ($include === '' || $include === null) {
+            return [];
+        }
+
+        $names = is_array($include) ? $include : explode(',', $include);
+
+        return array_values(array_filter(array_map(static fn (mixed $name): string => mb_trim((string) $name), $names), static fn (string $name): bool => $name !== ''));
     }
 }

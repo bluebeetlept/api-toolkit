@@ -39,6 +39,27 @@ it('allows all includes when no allowed list', function () {
     expect($parser->parse($request))->toBe(['anything', 'goes']);
 });
 
+it('names the requested includes that are not allowed', function (array | string $include, array $unknown) {
+    $parser = new IncludeParser(allowed: ['category', 'supplier']);
+
+    $request = Request::create('/', 'GET', ['include' => $include]);
+
+    expect($parser->unknown($request))->toBe($unknown);
+})->with([
+    'all allowed' => ['category, supplier', []],
+    'one not allowed' => ['category,secret', ['secret']],
+    'as a list' => [['category', 'secret'], ['secret']],
+    'nothing requested' => ['', []],
+]);
+
+it('names every requested include as unknown when none are allowed', function () {
+    $parser = new IncludeParser();
+
+    $request = Request::create('/', 'GET', ['include' => 'category,supplier']);
+
+    expect($parser->unknown($request))->toBe(['category', 'supplier']);
+});
+
 it('returns empty for empty include string', function () {
     $parser = new IncludeParser(allowed: ['category']);
 

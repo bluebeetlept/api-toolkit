@@ -83,14 +83,25 @@ final class RequestBodyBuilder
      */
     public function queryParameters(string $formRequestClass): array
     {
-        $rules = $this->rules($formRequestClass, 'GET', 'queryParamRules');
+        $rules = $this->rules($formRequestClass, 'GET', 'queryParamRules') ?? [];
+        $allowedIncludes = $this->rules($formRequestClass, 'GET', 'allowedIncludes');
+        $parameters = [];
 
-        if ($rules === null || $rules === []) {
-            return [];
+        if ($allowedIncludes !== null && $allowedIncludes !== []) {
+            $parameters[] = [
+                'name' => 'include',
+                'in' => 'query',
+                'required' => false,
+                'description' => 'Include related resources. Comma-separated. Allowed: '.implode(', ', $allowedIncludes),
+                'schema' => ['type' => 'string', 'example' => $allowedIncludes[0]],
+            ];
+        }
+
+        if ($rules === []) {
+            return $parameters;
         }
 
         $comments = $this->ruleComments($formRequestClass);
-        $parameters = [];
 
         foreach ($this->tree($rules)['children'] as $name => $node) {
             $schema = $this->schemaFor($node, (string) $name, $comments);

@@ -15,6 +15,7 @@ use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubNoRulesMethodReq
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubObjectRuleFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubOptionalFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubPipeRulesFormRequest;
+use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubShowFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubThrowingFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Requests\DocBuilderStubTypedFormRequest;
 use BlueBeetle\ApiToolkit\Tests\Fixtures\Resources\OpenApiStubResource;
@@ -763,5 +764,27 @@ it('adds a list request\'s own query parameters, each name once', function () {
     expect($parameters->pluck('name')->duplicates())->toBeEmpty()
         ->and($parameters->where('name', 'include'))->toHaveCount(1)
         ->and($parameters->firstWhere('name', 'archived')['description'])->toBe('Only archived stubs (true), or only the others (false).')
+    ;
+});
+
+it('documents the includes a single-record request allows', function () {
+    $document = (new DocumentBuilder(title: 'Test API', version: '1.0.0'))->build([
+        new EndpointDefinition(
+            path: '/api/v1/stubs/{stub}',
+            httpMethods: ['GET'],
+            resourceClass: OpenApiStubResource::class,
+            isList: false,
+            controllerClass: 'App\Controllers\StubController',
+            methodName: 'show',
+            formRequestClass: DocBuilderStubShowFormRequest::class,
+            routeName: null,
+        ),
+    ]);
+
+    $include = collect($document['paths']['/api/v1/stubs/{stub}']['get']['parameters'])->firstWhere('name', 'include');
+
+    expect($include['in'])->toBe('query')
+        ->and($include['description'])->toBe('Include related resources. Comma-separated. Allowed: category, supplier')
+        ->and($include['schema'])->toBe(['type' => 'string', 'example' => 'category'])
     ;
 });
