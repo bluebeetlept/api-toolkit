@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Http\Requests;
 
+use BlueBeetle\ApiToolkit\Rules\ValidPageSize;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Foundation\Http\FormRequest as BaseFormRequest;
@@ -12,6 +13,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class FormRequest extends BaseFormRequest
 {
+    /**
+     * The query keys the toolkit itself reads and validates (paging, sorting, filtering, includes, sparse fields),
+     * accepted whatever a request declares in queryParamRules().
+     */
+    private const array TOOLKIT_QUERY_KEYS = ['page', 'sort', 'filter', 'include', 'fields'];
+
     public function authorize(): bool
     {
         return true;
@@ -70,23 +77,42 @@ class FormRequest extends BaseFormRequest
         if (count($queryRules) > 0) {
             $this->rejectUnknownKeys(
                 array_keys($this->query()),
-                array_keys($queryRules),
+                [...array_keys($queryRules), ...self::TOOLKIT_QUERY_KEYS],
             );
-
-            /** @var ValidationFactory $factory */
-            $factory = $this->container->make(ValidationFactory::class);
-
-            $instance = $factory->make(
-                data: $this->query(),
-                rules: $queryRules,
-                messages: $this->queryParamMessages(),
-                attributes: $this->queryParamAttributes(),
-            );
-
-            if ($instance->fails()) {
-                $this->failedValidation($instance);
-            }
         }
+
+        if (count($queryRules) === 0 && $this->query('page') === null) {
+            return;
+        }
+
+        /** @var ValidationFactory $factory */
+        $factory = $this->container->make(ValidationFactory::class);
+
+        $instance = $factory->make(
+            data: $this->query(),
+            rules: [...$this->pageRules(), ...$queryRules],
+            messages: $this->queryParamMessages(),
+            attributes: $this->queryParamAttributes(),
+        );
+
+        if ($instance->fails()) {
+            $this->failedValidation($instance);
+        }
+    }
+
+    /**
+     * The paging the toolkit reads (page[number], page[size], page[cursor]), checked rather than quietly clamped.
+     *
+     * @return array<string, mixed>
+     */
+    private function pageRules(): array
+    {
+        return [
+            'page' => ['array'],
+            'page.number' => ['integer', 'min:1'],
+            'page.size' => ['integer', new ValidPageSize()],
+            'page.cursor' => ['string'],
+        ];
     }
 
     private function validateFormData(): void
