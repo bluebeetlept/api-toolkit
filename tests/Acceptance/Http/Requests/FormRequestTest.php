@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests;
 
+use BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithAllowedIncludes;
 use BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithFormInputRules;
 use BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithNoRules;
 use BlueBeetle\ApiToolkit\Tests\Acceptance\Http\Requests\Stubs\FormRequestWithQueryAndBodyRules;
@@ -54,6 +55,17 @@ it('refuses a page that is not one, with or without query rules of its own', fun
     'a page number that is not a number' => ['page[number]=abc'],
     'a page size that is not offered' => ['page[size]=1000'],
     'a page that is not a set' => ['page=2'],
+]);
+
+it('checks include against the relationships the request allows', function (string $query, int $status) {
+    Route::get('/', fn (FormRequestWithAllowedIncludes $request) => response()->json(['ok' => true]));
+
+    $this->getJson("/?{$query}")->assertStatus($status);
+})->with([
+    'no include' => ['', Response::HTTP_OK],
+    'allowed includes' => ['include=category,supplier', Response::HTTP_OK],
+    'allowed includes as a list' => ['include[]=category&include[]=supplier', Response::HTTP_OK],
+    'an include it does not allow' => ['include=category,secret', Response::HTTP_UNPROCESSABLE_ENTITY],
 ]);
 
 it('validates form data', function () {

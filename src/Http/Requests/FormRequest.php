@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace BlueBeetle\ApiToolkit\Http\Requests;
 
+use BlueBeetle\ApiToolkit\Rules\ValidInclude;
 use BlueBeetle\ApiToolkit\Rules\ValidPageSize;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
@@ -81,7 +82,9 @@ class FormRequest extends BaseFormRequest
             );
         }
 
-        if (count($queryRules) === 0 && $this->query('page') === null) {
+        $allowedIncludes = $this->allowedIncludes();
+
+        if (count($queryRules) === 0 && $this->query('page') === null && ($allowedIncludes === null || $this->query('include') === null)) {
             return;
         }
 
@@ -90,7 +93,11 @@ class FormRequest extends BaseFormRequest
 
         $instance = $factory->make(
             data: $this->query(),
-            rules: [...$this->pageRules(), ...$queryRules],
+            rules: [
+                ...$this->pageRules(),
+                ...($allowedIncludes === null ? [] : ['include' => [new ValidInclude($allowedIncludes)]]),
+                ...$queryRules,
+            ],
             messages: $this->queryParamMessages(),
             attributes: $this->queryParamAttributes(),
         );
@@ -98,6 +105,17 @@ class FormRequest extends BaseFormRequest
         if ($instance->fails()) {
             $this->failedValidation($instance);
         }
+    }
+
+    /**
+     * The relationships this request's `include` may name, checked for it; null leaves `include` to the request's
+     * own rules (and, on a list, to its resource).
+     *
+     * @return list<string>|null
+     */
+    public function allowedIncludes(): array | null
+    {
+        return null;
     }
 
     /**
