@@ -35,6 +35,27 @@ it('rejects unknown query params', function () {
     $response->assertStatus(Response::HTTP_BAD_REQUEST);
 });
 
+it('lets the query keys the toolkit reads through, whatever the request declares', function () {
+    Route::get('/', fn (FormRequestWithQueryParamRules $request) => response()->json(['ok' => true]));
+
+    $response = $this->getJson('/?include[]=category&page[number]=2&page[size]=10&sort=-name&filter[name]=a&fields[products]=name');
+
+    $response->assertStatus(Response::HTTP_OK);
+});
+
+it('refuses a page that is not one, with or without query rules of its own', function (string $query) {
+    Route::get('/rules', fn (FormRequestWithQueryParamRules $request) => response()->json(['ok' => true]));
+    Route::get('/none', fn (FormRequestWithNoRules $request) => response()->json(['ok' => true]));
+
+    $this->getJson("/rules?include[]=category&{$query}")->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    $this->getJson("/none?{$query}")->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+})->with([
+    'a page number below 1' => ['page[number]=0'],
+    'a page number that is not a number' => ['page[number]=abc'],
+    'a page size that is not offered' => ['page[size]=1000'],
+    'a page that is not a set' => ['page=2'],
+]);
+
 it('validates form data', function () {
     Route::post('/', fn (FormRequestWithFormInputRules $request) => response()->json(['ok' => true]));
 
